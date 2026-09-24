@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=61"]
+# >=77 for PEP 639 `license`/`license-files`; earlier versions reject them.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +8,8 @@ name = "fdvadpll"
 version = "1.0.0"
 description = "Behavioural model of a fractional-N DPLL with the phase error quantised in the fully differential voltage domain (Wu et al., JSSC 2021), plus an ADPLL extension"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "scipy>=1.10"]
 
