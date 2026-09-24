@@ -1,0 +1,11 @@
+* minimal sky130 nfet check
+.lib /foss/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+Vd d 0 0.9
+Vg g 0 0.9
+XM1 d g 0 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+.op
+.control
+run
+print @XM1.XM1.msky130_fd_pr__nfet_01v8[id]
+.endc
+.end

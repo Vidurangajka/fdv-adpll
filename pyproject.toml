@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fdvadpll"
+version = "1.0.0"
+description = "Behavioural model of a fractional-N DPLL with the phase error quantised in the fully differential voltage domain (Wu et al., JSSC 2021), plus an ADPLL extension"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7"]
+dev = ["pytest>=7.0", "matplotlib>=3.7"]
+
+[tool.setuptools]
+packages = ["fdvadpll"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "slow: full-length simulation runs (deselect with '-m \"not slow\"')",
+]

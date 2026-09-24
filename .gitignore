@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Generated dataset.  11 MB, and deterministic given --seed, so it is cheaper
+# to regenerate than to version:  python scripts/make_dataset.py  (~30 s).
+# The provenance file is small and IS tracked, so the ranges and limitations
+# behind a given CSV stay in history even though the rows do not.
+data/design_space.csv
+
+# ngspice / xschem output
+*.raw
+*.out
+silicon/**/*.log

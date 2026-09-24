@@ -1,0 +1,65 @@
+* FDVPD ramp generator -- slew rate and curvature, sky130A
+*
+* Checks the two numbers the behavioural spec depends on:
+*
+*   SR       = 2*I_R/C_SAR, the volts-per-second the detector converts with.
+*              The spec asks for 0.4 mV/ps differential, i.e. 0.2 mV/ps per
+*              side, from I_R = 200 uA into C_SAR = 1 pF.
+*   curvature  set by the finite output impedance of the current sink.  The
+*              tolerance budget bounds ramp_nl2, so this has to be measured.
+*
+* Single-ended: the real detector is two of these ramping in opposite
+* directions, so the differential slew rate is twice what is reported here.
+*
+* NOTE ON SYNTAX: W and L are passed to the sky130 device subcircuits as bare
+* numbers, in microns.  Passing them as {expressions} breaks the parameter
+* chain the model cards rely on, and ngspice then fails to resolve `l`, `w`
+* and `mult` inside the BSIM card with a misleading "Undefined parameter [l]".
+*
+*   ngspice -b tb_ramp.spice
+
+.lib /foss/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+
+.param VDD  = 1.8
+.param IREF = 200u
+.param CSAR = 1000f
+
+Vdd vdd 0 {VDD}
+
+* --- reference branch: diode-connected mirror at I_R -------------------
+Iref vdd nbias {IREF}
+XMref nbias nbias 0 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+
+* --- ramp branch: mirrored sink discharging C_SAR ---------------------
+XMramp outp nbias 0 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+Cs outp 0 {CSAR}
+
+* precharge: pfet holds outp at VDD while its gate is low, releases at 2 ns
+Vpre pre 0 PULSE(0 {VDD} 2n 20p 20p 60n 120n)
+XSw vdd pre outp vdd sky130_fd_pr__pfet_01v8 L=0.15 W=20 nf=1 m=1
+
+.tran 2p 12n
+
+* --- slew rate across the window the SAR actually uses -----------------
+* The detector ramps for at most one PD period (2 ns) after the reference
+* edge.  Sample away from the switch transient and before the sink leaves
+* saturation.
+.meas tran v_a   FIND v(outp) AT=2.5n
+.meas tran v_b   FIND v(outp) AT=3.5n
+.meas tran v_c   FIND v(outp) AT=4.5n
+.meas tran sr_early PARAM='(v_a-v_b)/1n'
+.meas tran sr_late  PARAM='(v_b-v_c)/1n'
+.meas tran sr_droop_pct PARAM='100*(sr_early-sr_late)/sr_early'
+
+* --- headroom: how far the ramp can run before the sink starves ---------
+* 1.8 written out: a .meas PARAM expression cannot dereference {VDD}
+.meas tran v_2ns FIND v(outp) AT=4.0n
+.meas tran swing_2ns PARAM='1.8-v_2ns'
+
+* .meas prints its own results; re-printing them from .control only produces
+* "vector not available" warnings, because the meas vectors are consumed.
+.control
+run
+.endc
+
+.end

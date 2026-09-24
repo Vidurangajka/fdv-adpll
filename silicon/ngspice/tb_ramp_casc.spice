@@ -1,0 +1,140 @@
+* FDVPD ramp generator -- simple mirror vs wide-swing cascode sink, sky130A
+*
+* tb_ramp.spice measured a plain NMOS mirror and found the slew rate on target
+* but the curvature roughly 2x over budget (ramp_nl2 ~ 0.009 /V against 0.005).
+* The cause is the finite output impedance of the sink: as outp falls, Vds falls
+* and the sink current falls with it, so the ramp bends.
+*
+* This testbench runs BOTH sinks from the SAME precharge pulse into the SAME
+* load, so the comparison is like-for-like.
+*
+*   _s  simple mirror      (the tb_ramp.spice circuit, reproduced unchanged)
+*   _c  wide-swing cascode
+*
+* WHY WIDE-SWING, which is not the obvious choice here.  The ramp starts at
+* VDD = 1.8 and falls 400 mV, so outp never goes below 1.4 V and there is
+* ~300 mV of headroom going spare -- a plain cascode should be affordable.  It
+* is not, and for a reason that has nothing to do with the output node: a plain
+* cascode wants its gate at 2*Vgs, and at this bias 2*Vgs = 1.84 V, ABOVE the
+* supply.  An ideal current source will drive the node there and the simulation
+* looks healthy, but no real PMOS source can, so the circuit does not exist.
+*
+* Widening the bias devices until 2*Vgs fits under VDD works, but then the
+* mirror device's drain no longer matches the reference diode's (0.64 V against
+* 0.92 V) and the copied current comes out 3 % low.  The wide-swing generator
+* fixes both at once: one W/4 device sets cbias = Vth + 2*Vov ~ 1.4 V, which
+* fits under the supply with compliance to spare, AND cascoding the reference
+* branch from the same node puts nrc and nxc at the same Vov, so the mirror
+* is matched by construction.
+*
+* SYNTAX (same trap as tb_ramp.spice): W and L go to the sky130 device
+* subcircuits as bare numbers in microns.  {expressions} break the parameter
+* chain the model cards rely on and ngspice then reports "Undefined parameter
+* [l]" from inside the BSIM card.
+*
+*   ngspice -b tb_ramp_casc.spice
+
+.lib /foss/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+
+.param VDD  = 1.8
+.param IREF = 200u
+.param CSAR = 1000f
+
+Vdd vdd 0 {VDD}
+
+* =========================================================================
+* branch S -- simple mirror, exactly the tb_ramp.spice circuit
+* =========================================================================
+Irefs vdd nbias_s {IREF}
+XMrefs nbias_s nbias_s 0 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+
+XM1s outp_s nbias_s 0 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+Cs   outp_s 0 {CSAR}
+
+* =========================================================================
+* branch C -- wide-swing cascode
+* =========================================================================
+* Bias generator: one quarter the aspect ratio of the mirror at the same
+* current, so its overdrive doubles and cbias = Vth + 2*Vov.  That is exactly
+* the gate voltage that parks each cascode source one Vov above its own source
+* -- every device sits at the edge of saturation and nothing is wasted.
+Ib vdd cbias {IREF}
+XMwb cbias cbias 0 0 sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=1
+
+* Cascoded reference.  Mr's drain (nrc) is held at Vov by the cascode, which is
+* the same voltage the ramp branch's M1c sees -- that is what makes the copy
+* accurate.  Mr is diode-connected through the cascode, gate taken from nbias.
+Irefc vdd nbias {IREF}
+XMrc nbias cbias nrc 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+XMr  nrc   nbias 0   0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+
+* Cascoded sink
+XM1c nxc    nbias 0   0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+XM2c outp_c cbias nxc 0 sky130_fd_pr__nfet_01v8 L=1 W=20 nf=1 m=1
+Cc   outp_c 0 {CSAR}
+
+* =========================================================================
+* precharge: pfets hold both outputs at VDD, release together at 2 ns
+* =========================================================================
+Vpre pre 0 PULSE(0 {VDD} 2n 20p 20p 60n 120n)
+XSws vdd pre outp_s vdd sky130_fd_pr__pfet_01v8 L=0.15 W=20 nf=1 m=1
+XSwc vdd pre outp_c vdd sky130_fd_pr__pfet_01v8 L=0.15 W=20 nf=1 m=1
+
+.tran 2p 12n
+
+* --- slew rate over the window the SAR actually uses ----------------------
+* Release is at 2 ns and the detector ramps for at most one PD period (2 ns).
+* Sample clear of the switch transient and before the sink leaves saturation.
+* Same sample instants as tb_ramp.spice so the two runs are comparable.
+.meas tran vs_a FIND v(outp_s) AT=2.5n
+.meas tran vs_b FIND v(outp_s) AT=3.5n
+.meas tran vs_c FIND v(outp_s) AT=4.5n
+.meas tran vc_a FIND v(outp_c) AT=2.5n
+.meas tran vc_b FIND v(outp_c) AT=3.5n
+.meas tran vc_c FIND v(outp_c) AT=4.5n
+
+.meas tran sr_early_s PARAM='(vs_a-vs_b)/1n'
+.meas tran sr_late_s  PARAM='(vs_b-vs_c)/1n'
+.meas tran sr_early_c PARAM='(vc_a-vc_b)/1n'
+.meas tran sr_late_c  PARAM='(vc_b-vc_c)/1n'
+
+.meas tran droop_pct_s PARAM='100*(sr_early_s-sr_late_s)/sr_early_s'
+.meas tran droop_pct_c PARAM='100*(sr_early_c-sr_late_c)/sr_early_c'
+
+* --- swing over the 2 ns window, and the implied ramp_nl2 -----------------
+* ramp_nl2 in the behavioural model is referred to the DIFFERENTIAL excursion,
+* and the real detector is two of these ramping in opposite directions, so the
+* differential swing is 2x the single-ended swing measured here.  1.8 written
+* out because a .meas PARAM expression cannot dereference {VDD}.
+.meas tran vs_2ns FIND v(outp_s) AT=4.0n
+.meas tran vc_2ns FIND v(outp_c) AT=4.0n
+.meas tran swing_s PARAM='1.8-vs_2ns'
+.meas tran swing_c PARAM='1.8-vc_2ns'
+.meas tran nl2_s PARAM='(sr_early_s-sr_late_s)/sr_early_s/(2*swing_s)'
+.meas tran nl2_c PARAM='(sr_early_c-sr_late_c)/sr_early_c/(2*swing_c)'
+
+* --- bias-point checks ----------------------------------------------------
+* These decide whether the droop number above is real.
+*
+*   bias_headroom  compliance left for whatever sources Ib from VDD.  Negative
+*                  means cbias is above the supply and the circuit cannot be
+*                  built, however healthy the droop looks.
+*   mirror_match   nxc - nrc.  Wide-swing puts both at Vov; if they differ the
+*                  mirror is copying at the wrong drain voltage and the slew
+*                  rate will be off by roughly that error times lambda.
+*   casc_margin    how far outp_c stays above the cascode source at the end of
+*                  the window.  Must remain above the cascode's own Vov.
+.meas tran v_cbias FIND v(cbias) AT=4.0n
+.meas tran v_nrc   FIND v(nrc)   AT=4.0n
+.meas tran v_nxc   FIND v(nxc)   AT=4.0n
+.meas tran bias_headroom PARAM='1.8-v_cbias'
+.meas tran mirror_match  PARAM='v_nxc-v_nrc'
+.meas tran casc_margin   PARAM='vc_2ns-v_nxc'
+
+* .meas prints its own results; re-printing them from .control only produces
+* "vector not available" warnings, because the meas vectors are consumed.
+.control
+run
+.endc
+
+.end

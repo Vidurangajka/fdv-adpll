@@ -1,0 +1,626 @@
+{
+  "generator": "silicon/spec/make_spec.py",
+  "fdvadpll_version": "1.0.0",
+  "created_utc": "2026-09-24T14:27:07Z",
+  "pdk": "sky130A",
+  "spur_target_dbc": -60.0,
+  "frac_bit": 5,
+  "operating_point": {
+    "frequency_plan": {
+      "f_ref_hz": 50000000.0,
+      "fcw": 20.0,
+      "fb_div": 2,
+      "f_ckv_hz": 1000000000.0,
+      "f_pd_hz": 500000000.0,
+      "t_pd_s": 2e-09
+    },
+    "ramp": {
+      "slew_rate_v_per_s": 400000000.0,
+      "c_sar_f": 1e-12,
+      "i_ramp_a": 0.00019999999999999998,
+      "full_scale_diff_v": 0.8,
+      "full_scale_single_ended_v": 0.4,
+      "v_cm_v": 0.55,
+      "t_offset_s": 3e-10,
+      "gm_id": 12.0,
+      "gm_ramp_s": 0.0024
+    },
+    "idac": {
+      "bits": 10,
+      "thermo_bits": 4,
+      "binary_bits": 6,
+      "unit_current_a": 1.9531249999999998e-07,
+      "lsb_s": 1.953125e-12,
+      "lsb_v": 0.00078125
+    },
+    "sar": {
+      "bits": 7,
+      "lsb_v": 0.000195,
+      "lsb_s": 4.875e-13,
+      "full_scale_v": 0.02496,
+      "full_scale_s": 6.24e-11,
+      "comparator_noise_v_rms": 0.00015
+    },
+    "performance": {
+      "effective_bits": 12.002310160687202,
+      "in_band_floor_dbc_hz": -124.46555502620032,
+      "noise_terms_dbc_hz": {
+        "ramp": -127.21042764323883,
+        "ktc": -133.88495717213834,
+        "comparator": -129.5454773216435,
+        "quantisation": -138.05842273598302,
+        "pd_total": -124.46555502620032
+      },
+      "jitter_s": 5.949977450035643e-13,
+      "fdvpd_power_w": 0.0011246666666666666,
+      "power_breakdown_w": {
+        "idac": 0.000864,
+        "cdyn": 0.000144,
+        "comparator": 6.666666666666667e-05,
+        "logic": 5e-05
+      },
+      "supply_v": 1.8
+    }
+  },
+  "tolerance_budget": {
+    "dac_sigma_lsb": {
+      "parameter": "dac_sigma_lsb",
+      "target_dbc": -60.0,
+      "limit": 0.025,
+      "limit_kind": "measured",
+      "seeds": [
+        7,
+        101,
+        2027
+      ],
+      "sweep": [
+        {
+          "value": 0.0125,
+          "spur_dbc": -71.34704672276605,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -71.34704672276605,
+            -78.4845611880907,
+            -74.19457361733615
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.025,
+          "spur_dbc": -65.33841215513232,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -65.33841215513232,
+            -72.37598958938604,
+            -68.50882496910313
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.05,
+          "spur_dbc": -59.27797979389946,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -59.27797979389946,
+            -66.34093486958133,
+            -62.684024620192275
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.1,
+          "spur_dbc": -53.24293518239432,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -53.24293518239432,
+            -60.338036224635154,
+            -56.73027617823994
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.2,
+          "spur_dbc": -50.75149565365571,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -28.02948145510243,
+            -54.30482404632083,
+            -50.75149565365571
+          ],
+          "locked_per_seed": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.4,
+          "spur_dbc": -44.75254271821525,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -27.95446188466659,
+            -28.261977608748346,
+            -44.75254271821525
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            true
+          ]
+        }
+      ]
+    },
+    "dac_gain_err": {
+      "parameter": "dac_gain_err",
+      "target_dbc": -60.0,
+      "limit": 0.002,
+      "limit_kind": "measured",
+      "seeds": [
+        7,
+        101,
+        2027
+      ],
+      "sweep": [
+        {
+          "value": 0.00025,
+          "spur_dbc": -80.98228247001123,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -80.98228247001123,
+            -81.67836153784371,
+            -81.67970460860221
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.0005,
+          "spur_dbc": -75.06821396660558,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -75.06821396660558,
+            -75.39807322751602,
+            -75.65332858227808
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.001,
+          "spur_dbc": -69.21219665060336,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -69.21219665060336,
+            -69.33958483102026,
+            -69.40690155624041
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.002,
+          "spur_dbc": -63.23302195361552,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -63.23302195361552,
+            -63.33019732500891,
+            -63.326736544030666
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.004,
+          "spur_dbc": -28.124135975891782,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -28.143663611317198,
+            -28.14757748904067,
+            -28.124135975891782
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "value": 0.008,
+          "spur_dbc": -28.10310900083096,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -28.11941179323277,
+            -28.10310900083096,
+            -28.113239454535403
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        }
+      ]
+    },
+    "dac_settle_tau": {
+      "parameter": "dac_settle_tau",
+      "target_dbc": -60.0,
+      "limit": 4e-09,
+      "limit_kind": "measured",
+      "seeds": [
+        7,
+        101,
+        2027
+      ],
+      "sweep": [
+        {
+          "value": 1e-09,
+          "spur_dbc": -92.76855031842493,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -92.76855031842493,
+            -93.09402456167314,
+            -96.79882337229355
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 2e-09,
+          "spur_dbc": -92.7444931337472,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -92.97565310225801,
+            -92.7444931337472,
+            -96.44956250770527
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 4e-09,
+          "spur_dbc": -60.51239751530133,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -60.51239751530133,
+            -60.585655042741095,
+            -60.61085315964164
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 6.000000000000001e-09,
+          "spur_dbc": -53.083620014442815,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -53.083620014442815,
+            -53.119932885455114,
+            -53.118654213127826
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "value": 8e-09,
+          "spur_dbc": -50.433789529426114,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -50.433789529426114,
+            -50.44586353294237,
+            -50.45270112183982
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "value": 1.2000000000000002e-08,
+          "spur_dbc": -45.72763343173507,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -45.72763343173507,
+            -45.74067361762147,
+            -45.735563081249246
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        }
+      ]
+    },
+    "ramp_nl2": {
+      "parameter": "ramp_nl2",
+      "target_dbc": -60.0,
+      "limit": 0.0025,
+      "limit_kind": "measured",
+      "seeds": [
+        7,
+        101,
+        2027
+      ],
+      "sweep": [
+        {
+          "value": 0.00125,
+          "spur_dbc": -68.94958768215871,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -69.18665774732618,
+            -69.04190413254653,
+            -68.94958768215871
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.0025,
+          "spur_dbc": -62.990204520225745,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -63.13377068729803,
+            -63.03080800542055,
+            -62.990204520225745
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.005,
+          "spur_dbc": -57.03531530028292,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -57.094043478249446,
+            -57.04466409022316,
+            -57.03531530028292
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.01,
+          "spur_dbc": -51.0682150900696,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -51.09470275681158,
+            -51.0682150900696,
+            -51.073802911515436
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.02,
+          "spur_dbc": -45.13489624039038,
+          "locked": true,
+          "passes": false,
+          "spur_per_seed": [
+            -45.14894072285738,
+            -45.13489624039038,
+            -45.138701762026166
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.05,
+          "spur_dbc": -39.00851687517677,
+          "locked": false,
+          "passes": false,
+          "spur_per_seed": [
+            -39.01741702743587,
+            -39.009624687130284,
+            -39.00851687517677
+          ],
+          "locked_per_seed": [
+            false,
+            false,
+            false
+          ]
+        }
+      ]
+    },
+    "adc_sigma_cap": {
+      "parameter": "adc_sigma_cap",
+      "target_dbc": -60.0,
+      "limit": 0.08,
+      "limit_kind": "measured",
+      "seeds": [
+        7,
+        101,
+        2027
+      ],
+      "sweep": [
+        {
+          "value": 0.01,
+          "spur_dbc": -95.63771298311438,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -28.187620160176245,
+            -98.99733027025697,
+            -95.63771298311438
+          ],
+          "locked_per_seed": [
+            false,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.02,
+          "spur_dbc": -91.91523051090397,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -91.91523051090397,
+            -99.69043897931427,
+            -95.59274023382412
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.04,
+          "spur_dbc": -92.41545328934251,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -92.41545328934251,
+            -98.66002534742702,
+            -95.54807801468587
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.08,
+          "spur_dbc": -92.22272925021298,
+          "locked": true,
+          "passes": true,
+          "spur_per_seed": [
+            -92.22272925021298,
+            -99.20491198246667,
+            -95.54473244208532
+          ],
+          "locked_per_seed": [
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "value": 0.12,
+          "spur_dbc": null,
+          "locked": false,
+          "passes": false,
+          "note": "CDAC mismatch made the SAR non-monotonic; reduce adc_sigma_cap"
+        },
+        {
+          "value": 0.16,
+          "spur_dbc": null,
+          "locked": false,
+          "passes": false,
+          "note": "CDAC mismatch made the SAR non-monotonic; reduce adc_sigma_cap"
+        }
+      ]
+    }
+  },
+  "comparator_tradeoff": [
+    {
+      "comparator_noise_v_rms": 7.5e-05,
+      "in_band_floor_dbc_hz": -125.6167302532339,
+      "comparator_power_w": 0.0002666666666666667,
+      "share_of_floor_pct": 10.117315698404209
+    },
+    {
+      "comparator_noise_v_rms": 0.0001,
+      "in_band_floor_dbc_hz": -125.2877627880754,
+      "comparator_power_w": 0.00015,
+      "share_of_floor_pct": 16.674239244629216
+    },
+    {
+      "comparator_noise_v_rms": 0.00015,
+      "in_band_floor_dbc_hz": -124.46555502620032,
+      "comparator_power_w": 6.666666666666667e-05,
+      "share_of_floor_pct": 31.046151358258562
+    },
+    {
+      "comparator_noise_v_rms": 0.00022,
+      "in_band_floor_dbc_hz": -123.13855433203629,
+      "comparator_power_w": 3.0991735537190076e-05,
+      "share_of_floor_pct": 49.20061649063711
+    },
+    {
+      "comparator_noise_v_rms": 0.00033,
+      "in_band_floor_dbc_hz": -121.0568083426218,
+      "comparator_power_w": 1.3774104683195591e-05,
+      "share_of_floor_pct": 68.5454234574528
+    }
+  ]
+}

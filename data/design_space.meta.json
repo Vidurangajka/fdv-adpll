@@ -1,0 +1,148 @@
+{
+  "generator": "scripts/make_dataset.py",
+  "fdvadpll_version": "1.0.0",
+  "created_utc": "2026-09-24T03:48:23Z",
+  "seed": 0,
+  "profile": "realisable",
+  "n_rows": 16384,
+  "n_feasible": 7062,
+  "labels_from": "analytic s-domain model (fdvadpll.noise), Sec. II-B equations (1)-(13) plus the closed-loop composite",
+  "sampling": "scrambled Sobol, log-uniform where marked",
+  "fixed": {
+    "f_ref_hz": 80000000.0,
+    "jitter_band_hz": [
+      10000.0,
+      40000000.0
+    ],
+    "ramp_headroom_v": 1.2,
+    "i_ramp_bounds_a": [
+      1e-05,
+      0.005
+    ],
+    "p_rest_w": 0.0076359999999999996,
+    "p_integer_n": 0.25,
+    "min_capture_margin": 6.0,
+    "max_realisable_bw_hz": 1000000.0
+  },
+  "continuous_ranges": {
+    "fcw": {
+      "low": 25.0,
+      "high": 100.0,
+      "scale": "lin"
+    },
+    "sr_v_per_s": {
+      "low": 200000000.0,
+      "high": 3200000000.0,
+      "scale": "log"
+    },
+    "c_sar_f": {
+      "low": 1e-13,
+      "high": 3e-12,
+      "scale": "log"
+    },
+    "adc_lsb_v": {
+      "low": 3e-05,
+      "high": 0.0004,
+      "scale": "log"
+    },
+    "comparator_noise_v": {
+      "low": 2.5e-05,
+      "high": 0.0004,
+      "scale": "log"
+    },
+    "gamma": {
+      "low": 0.7,
+      "high": 2.0,
+      "scale": "lin"
+    },
+    "gm_id": {
+      "low": 5.0,
+      "high": 20.0,
+      "scale": "lin"
+    },
+    "flicker_corner_hz": {
+      "low": 10000.0,
+      "high": 2000000.0,
+      "scale": "log"
+    },
+    "dco_pn_1mhz_dbc": {
+      "low": -140.0,
+      "high": -120.0,
+      "scale": "lin"
+    },
+    "dco_fcorner_hz": {
+      "low": 10000.0,
+      "high": 500000.0,
+      "scale": "log"
+    },
+    "ref_pn_floor_dbc": {
+      "low": -170.0,
+      "high": -150.0,
+      "scale": "lin"
+    },
+    "ref_fcorner_hz": {
+      "low": 100.0,
+      "high": 10000.0,
+      "scale": "log"
+    },
+    "loop_bw_hz": {
+      "low": 50000.0,
+      "high": 4000000.0,
+      "scale": "log"
+    },
+    "loop_damping": {
+      "low": 0.5,
+      "high": 2.0,
+      "scale": "lin"
+    }
+  },
+  "discrete_values": {
+    "fb_div": [
+      1,
+      2,
+      4
+    ],
+    "dac_bits": [
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "adc_bits": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ]
+  },
+  "frac_bits": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "conventions": {
+    "frac_bit": "-1 means an integer-N channel; see integer_n",
+    "feasible": "False rows keep their design columns and have empty targets; reject_reason says which constraint failed",
+    "sim_*": "empty except on the --sim subset"
+  },
+  "limitations": [
+    "The oscillator's power is not modelled: dco_pn_1mhz_dbc varies freely but costs nothing, so p_total_w and fom_db understate the true cost of a quiet DCO. Treat fom_db as a detector figure of merit.",
+    "p_total_w is the computed FDVPD power plus a fixed allowance for everything else, taken from the prototype's measured breakdown.",
+    "Labels are analytic. The event-driven simulator agrees to a few per cent on the default design point, but a design that does not lock has no meaningful analytic jitter -- use --sim to see where.",
+    "The I-DAC is not dithered, so deep fractional channels carry a DAC-quantisation floor the analytic model does not include."
+  ]
+}
