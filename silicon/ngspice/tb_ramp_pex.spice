@@ -1,0 +1,56 @@
+* FDVPD ramp sink -- post-layout, sky130A
+*
+* tb_ramp_casc.spice branch C, with the five nfets and the precharge pfet
+* replaced by the netlist magic extracts from layout/ramp_sink.gds.  Same
+* sources, same 1 pF, same pulse, same sample instants -- so the only thing
+* that differs from the schematic run is the layout: parasitic capacitance, and
+* the junction areas (ad/as/pd/ps) the schematic devices were simulated without.
+*
+* Needs layout/build/ramp_sink_pex.spice, so run layout/verify.sh first.  The
+* include is absolute (silicon/ mounted at /work, as everywhere else) because
+* corners.sh runs a copy of this file from /tmp:
+*
+*   bash layout/verify.sh && ngspice -b ngspice/tb_ramp_pex.spice
+*   bash ngspice/corners.sh ngspice/tb_ramp_pex.spice
+
+.lib /foss/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.include /work/layout/build/ramp_sink_pex.spice
+
+.param VDD  = 1.8
+.param IREF = 200u
+.param CSAR = 1000f
+
+Vdd vdd 0 {VDD}
+Vss vss 0 0
+
+Ib    vdd cbias {IREF}
+Irefc vdd nbias {IREF}
+Cc    outp 0 {CSAR}
+Vpre  pre 0 PULSE(0 {VDD} 2n 20p 20p 60n 120n)
+
+* port order is fixed by verify.sh: vdd vss pre outp nbias cbias
+Xdut vdd vss pre outp nbias cbias ramp_sink
+
+.tran 2p 12n
+
+.meas tran vc_a FIND v(outp) AT=2.5n
+.meas tran vc_b FIND v(outp) AT=3.5n
+.meas tran vc_c FIND v(outp) AT=4.5n
+.meas tran sr_early_c PARAM='(vc_a-vc_b)/1n'
+.meas tran sr_late_c  PARAM='(vc_b-vc_c)/1n'
+.meas tran droop_pct_c PARAM='100*(sr_early_c-sr_late_c)/sr_early_c'
+.meas tran vc_2ns FIND v(outp) AT=4.0n
+.meas tran swing_c PARAM='1.8-vc_2ns'
+.meas tran nl2_c PARAM='(sr_early_c-sr_late_c)/sr_early_c/(2*swing_c)'
+.meas tran v_cbias FIND v(cbias) AT=4.0n
+.meas tran bias_headroom PARAM='1.8-v_cbias'
+* nrc / nxc are labelled in the layout so they survive extraction by name
+.meas tran v_nrc FIND v(xdut.nrc) AT=4.0n
+.meas tran v_nxc FIND v(xdut.nxc) AT=4.0n
+.meas tran mirror_match PARAM='v_nxc-v_nrc'
+
+.control
+run
+.endc
+
+.end

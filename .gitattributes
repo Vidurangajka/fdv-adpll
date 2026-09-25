@@ -1,0 +1,7 @@
+# Scripts run inside the Linux container; a CRLF checkout (core.autocrlf on
+# Windows) makes bash fail on the first line.
+*.sh    text eol=lf
+*.tcl   text eol=lf
+*.spice text eol=lf
+
+*.gds   binary

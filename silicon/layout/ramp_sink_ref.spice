@@ -1,0 +1,23 @@
+* ramp_sink -- LVS reference for layout/ramp_sink.gds
+*
+* Branch C of ngspice/tb_ramp_casc.spice with the ideal sources and C_SAR
+* removed: I_R and I_b arrive on nbias / cbias, and outp drives the SAR.
+* Device sizes are the testbench's, written the way the layout draws them --
+* each 20 um device as 4 fingers of 5 um -- plus the two grounded dummies that
+* flank the Mr / M1c pair.  If a size changes in the testbench, change it here
+* and in ramp_sink.py; LVS is what catches the one you forgot.
+
+.subckt ramp_sink vdd vss pre outp nbias cbias
+* wide-swing bias: one quarter the aspect ratio, cbias = Vth + 2 Vov
+XMwb  cbias cbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=1
+* cascoded reference
+XMrc  nbias cbias nrc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+XMr   nrc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+* cascoded ramp sink
+XM1c  nxc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+XM2c  outp  cbias nxc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+* dummies at both ends of the Mr / M1c diffusion
+XMdum vss   vss   vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=2
+* precharge
+XMsw  outp  pre   vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=5 nf=1 m=4
+.ends

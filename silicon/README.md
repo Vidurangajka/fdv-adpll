@@ -117,7 +117,7 @@ reported `dac_sigma_lsb` twice as loose as the pessimistic draw supports.
 
 | block | schematic | sized | simulated | layout |
 |---|---|---|---|---|
-| ramp generator | netlist | ✅ wide-swing cascode | ✅ slew + curvature, 9 corners | — |
+| ramp generator | netlist | ✅ wide-swing cascode | ✅ slew + curvature, 9 corners | ✅ DRC / LVS clean, post-layout 9 corners |
 | current DAC | — | — | — | — |
 | SAR ADC | — | — | — | — |
 | timing / control | — | — | — | — |
@@ -189,6 +189,80 @@ testbench, so the 0.26 % slew-rate spread across corners is optimistic. The real
 reference will come from a bandgap and a resistor, and that variation lands
 directly on the slew rate.
 
+### Ramp generator — layout
+
+![ramp_sink layout](layout/ramp_sink.png)
+
+`layout/ramp_sink.py` draws the cascoded sink as the cell `ramp_sink`,
+22.7 × 32.1 µm. It contains the five nfets and the precharge pfet and nothing
+else. The two 200 µA currents arrive on `nbias` and `cbias`, because the
+testbench's ideal sources are not part of this cell (item 2 below). `outp` is a
+port, because C_SAR is the SAR's capacitor array.
+
+```bash
+docker run --rm -e PDK=sky130A -v "<repo>/silicon:/work" -w /work \
+  hpretl/iic-osic-tools:latest --skip bash layout/verify.sh
+```
+
+`verify.sh` generates the GDS, runs magic's full DRC deck, extracts, and runs
+netgen LVS against `layout/ramp_sink_ref.spice`. It fails unless DRC is clean
+and the circuits match uniquely. Note `-e PDK=sky130A`: the image defaults to
+IHP, and the script also refuses an empty cell. An earlier version read the
+GDS wrongly and got a clean DRC on nothing.
+
+Floorplan, bottom to top:
+
+- **Row 1** is the matched pair, Mr and M1c, in one diffusion. The drains are
+  ordered A B B A, so both devices share a centroid, and every source column is
+  shared. A grounded dummy finger at each end gives every active finger the
+  same poly neighbours. This is the pair behind `mirror_match`, so it is the
+  only one drawn common-centroid.
+- **Row 2** holds the cascodes Mrc and M2c and the wide-swing bias device Mwb,
+  under one `cbias` gate bar.
+- **Row 3** is the precharge pfet, in its own nwell and n-tap ring.
+
+The NMOS rows sit in a p-tap ring. Each row routes its sources and drains down
+to m2 tracks below it and its gate up to an m1 bar above it, so the two never
+cross. The rows connect through m3 verticals in a channel on the right, and the
+four signal pins leave through the top edge.
+
+`ngspice/tb_ramp_pex.spice` reruns the branch-C measurements on the extracted
+netlist, with the same sources, 1 pF, pulse and sample instants. The only
+difference from the schematic run is the layout itself: parasitic capacitance,
+and junction areas the schematic devices were simulated without. At tt, 27 °C:
+
+| | schematic | post-layout | spec |
+|---|---|---|---|
+| slew rate, single-ended | 0.1979 mV/ps | 0.1949 mV/ps | 0.200 |
+| droop over the window | 0.027 % | 0.037 % | — |
+| `ramp_nl2` | 3.4e-4 /V | 4.6e-4 /V | ≤ 0.0025 |
+| mirror_match | 3.7 mV | 3.1 mV | — |
+| bias_headroom | 0.62 V | 0.62 V | > 0 |
+
+Across the nine corners (`bash ngspice/corners.sh ngspice/tb_ramp_pex.spice`),
+`nl2` spans 2.4e-4 … 7.4e-4 /V. The worst case is ff at −40 °C, **3.4× inside
+budget**, against 5.7× before layout. Curvature is still not the limit, but the
+layout spent about 40 % of the margin. Why has not been isolated. The likely
+cause is the drain junction capacitance on `outp`: the schematic devices had
+none, and unlike a fixed wiring parasitic it varies with voltage, which bends
+the ramp. Rerunning the extraction without junction areas would settle it.
+
+The slew rate is now 2.3 … 2.7 % low across the corners, against 1.0 % before
+layout, because the layout adds capacitance on `outp`. It is the same kind of
+gain error as before, so it is left to calibration, not trimmed into I_R. Its
+size does now matter, though: check the LMS gain range against 2.7 % plus the
+reference variation from item 2.
+
+What the layout does **not** yet do:
+
+- Only this cell is drawn. The ramp is differential in the detector, so the
+  second side and its placement against the first are still open.
+- There is no fill and no density check. Magic's deck does not cover density,
+  and it is a top-level concern anyway.
+- The Mr / M1c pair has dummies; the cascodes and Mwb do not. Their mismatch
+  shows up as a small drain-voltage error on the pair, which is second-order,
+  but it has not been Monte-Carlo'd.
+
 ## Acquisition margin is thin, and the sweeps show it
 
 The tolerance sweeps produce occasional non-monotonic points where one random
@@ -221,6 +295,9 @@ in Next.
    case behind that limit is not a yield number — this step is where a real one
    comes from.
 5. Draw the proven topologies in xschem, then lay out in magic with DRC/LVS.
+   The ramp sink is laid out (`layout/`), DRC and LVS clean, with post-layout
+   corners. It has no xschem schematic yet, since LVS runs against a
+   hand-written reference netlist. The other blocks wait on items 4 and 6.
 6. Widen the acquisition margin. The loop currently sits close enough to its
    limit that individual sweep points lose lock; that is a design problem the
    multi-seed reduction hides rather than solves.
