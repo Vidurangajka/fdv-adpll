@@ -45,16 +45,26 @@ fractional (bit 5), no cycle slips, no saturation after acquisition.
 
 ## Flow
 
-Everything runs in the IIC-OSIC-TOOLS container (xschem 3.4.8, magic 8.3.681,
-ngspice, netgen, klayout 0.30.11, sky130A):
+Everything runs in the IIC-OSIC-TOOLS container (xschem 3.4.8, magic 8.3.684,
+ngspice-47, netgen 1.5.323, klayout 0.30.12, sky130A; checked with `-Check`):
+
+`osic.ps1` (Windows) and `osic.sh` (Linux / macOS) wrap it. They mount
+`silicon/` at `/work` and always set `PDK=sky130A`, which the image does not
+default to:
 
 ```powershell
-docker run --rm -v "<repo>/silicon:/work" -w /work `
-  hpretl/iic-osic-tools:latest --skip bash -lc "ngspice -b ngspice/tb_ramp.spice"
+docker pull hpretl/iic-osic-tools:latest     # once, ~20 GB unpacked
+.\osic.ps1 -Check                            # PDK files, tool versions, a real sky130 sim
+.\osic.ps1 ngspice -b ngspice/tb_ramp.spice  # any batch command, run in silicon/
+.\osic.ps1 bash layout/verify.sh
+.\osic.ps1 -Shell                            # interactive bash
+.\osic.ps1 -Gui                              # xschem / magic desktop at http://localhost:8080
+.\osic.ps1 -Stop
 ```
 
-For the GUI tools (xschem, magic), drop `--skip …` and the container starts a
-VNC session on port 80.
+`$env:OSIC_IMAGE` overrides the image tag. Give Docker Desktop 6–8 GB of
+memory (Settings → Resources) for Monte-Carlo and post-layout runs; the 3 GB
+default is enough for DRC and LVS of single cells.
 
 ### Regenerating the spec
 
@@ -199,15 +209,14 @@ else. The two 200 µA currents arrive on `nbias` and `cbias`, because the
 testbench's ideal sources are not part of this cell (item 2 below). `outp` is a
 port, because C_SAR is the SAR's capacitor array.
 
-```bash
-docker run --rm -e PDK=sky130A -v "<repo>/silicon:/work" -w /work \
-  hpretl/iic-osic-tools:latest --skip bash layout/verify.sh
+```powershell
+.\osic.ps1 bash layout/verify.sh
 ```
 
 `verify.sh` generates the GDS, runs magic's full DRC deck, extracts, and runs
 netgen LVS against `layout/ramp_sink_ref.spice`. It fails unless DRC is clean
-and the circuits match uniquely. Note `-e PDK=sky130A`: the image defaults to
-IHP, and the script also refuses an empty cell. An earlier version read the
+and the circuits match uniquely. The wrapper sets `PDK=sky130A` because the
+image defaults to IHP, and the script also refuses an empty cell. An earlier version read the
 GDS wrongly and got a clean DRC on nothing.
 
 Floorplan, bottom to top:
