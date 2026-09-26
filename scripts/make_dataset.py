@@ -80,6 +80,10 @@ I_RAMP_MIN, I_RAMP_MAX = 10e-6, 5e-3
 #: Extra constraints applied by the 'realisable' profile.  Both are empirical,
 #: measured by cross-checking Sobol samples against the event-driven simulator
 #: -- neither follows from the s-domain model, which has no notion of lock.
+#: They were measured before three acquisition defects in the simulator were
+#: fixed, and are now conservative: most rows beyond the bandwidth ceiling
+#: lock, and about half of those below the margin do (README.md).  Kept as-is
+#: so the shipped dataset stays reproducible; re-derive before relying on them.
 MIN_CAPTURE_MARGIN = 6.0
 MAX_REALISABLE_BW = 1.0e6
 
@@ -216,7 +220,8 @@ def capture_margin(design: DesignParams) -> dict:
     This is the constraint the analytic model is blind to.  ``noise.py`` will
     happily report a jitter figure for a design whose detector would be railed
     from the first cycle, because nothing in the s-domain analysis knows the
-    ADC has ends.  Below a margin of about 5 the simulator stops locking.
+    ADC has ends.  Below a margin of about 3 the simulator mostly stops
+    locking (it read about 5 before the acquisition fixes).
     """
     h_lp, h_hp = noise.loop_transfer(design, F_GRID)
     residual = ((noise.dco_free_running_pn(design, F_GRID)
@@ -246,10 +251,9 @@ def check(design: DesignParams, margin: float, profile: str) -> str:
     if design.loop.bandwidth > design.f_ref / 10.0:
         return "loop bandwidth above f_REF/10"
     if profile == "realisable":
-        # Empirical, from cross-checking Sobol samples against the simulator:
-        # below this margin the detector rails, and above ~1 MHz of loop
-        # bandwidth designs stop locking for reasons the s-domain model does
-        # not capture.  See the module docstring.
+        # Empirical, from cross-checking Sobol samples against the simulator
+        # -- before its acquisition fixes, so both are conservative now; see
+        # the note on MIN_CAPTURE_MARGIN.
         if margin < MIN_CAPTURE_MARGIN:
             return "phase detector would rail on the uncorrected residual"
         if design.loop.bandwidth > MAX_REALISABLE_BW:

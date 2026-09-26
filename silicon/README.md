@@ -263,21 +263,68 @@ What the layout does **not** yet do:
   shows up as a small drain-voltage error on the pair, which is second-order,
   but it has not been Monte-Carlo'd.
 
-## Acquisition margin is thin, and the sweeps show it
+## Acquisition: three simulator defects, not a thin margin
 
-The tolerance sweeps produce occasional non-monotonic points where one random
-draw fails to acquire rather than degrading gracefully — `adc_sigma_cap = 0.01`
-used to report −28 dBc and no lock while 0.02 through 0.08 sat at −92 dBc and
-locked cleanly. These are acquisition races, not tolerance limits, and the
-multi-seed reduction above now absorbs them instead of letting one set a budget.
+This section used to say the design sat close to its acquisition limit. The
+evidence was real: sweep points where one draw failed to acquire while its
+neighbours locked (`adc_sigma_cap = 0.01` at −28 dBc and no lock, with 0.02 to
+0.08 clean at −92 dBc), and a gear bandwidth of `f_REF/12.5` that locked with
+ideal devices but not with any perturbation. The conclusion was wrong. It was
+three defects in how `fdvadpll/pll.py` forms the phase error during
+acquisition, and the design acquires comfortably once they are fixed.
 
-The underlying thinness is still there, though, and it is a property of the
-design rather than of the sweep. Widening the gear-shift bandwidth makes it much
-worse: at `f_REF/12.5` the design locks with ideal devices and then fails to
-acquire at all once any perturbation is added. `f_REF/25` is what the spec uses
-and is far more robust, but **a design this close to its acquisition limit is
-worth fixing before layout**, not just working around in the measurement. Item 6
-in Next.
+1. **The counter could not see an oscillator running fast.** Edges were only
+   generated up to the one the reference accumulator predicts, so when the
+   oscillator ran ahead the extra edges never existed and the counter pinned.
+   The FLL read zero frequency error, and only the railed detector's sign
+   pulled the loop in. A +30 MHz start took 12× longer than −30 MHz. Every
+   system-level acquisition test used a *negative* offset, so none saw it.
+2. **The integer phase error was double counted at the window ends.** The ramp
+   measures `dt` on the predicted edge, continuously through zero and through
+   one period, so an in-range residue already holds the whole phase error. The
+   counter's integer was added on top. The code already corrected this at the
+   zero end; at the far end, a few ps of lag with `T_frac` just under one
+   period made the counter read one short, a two-cycle kick once per sawtooth
+   period. Fractional channels could sit frequency-locked but railed ~75 % of
+   the time. On a railed sample the estimate is now the point of the counter's
+   one-cycle interval nearest the rail: exact near lock, correctly signed and
+   symmetric far out.
+3. **The FLL ignored the V_OS margin.** In lock the counter reads
+   `floor(Phi_R − delta)`; the FLL floored `Phi_R`. In a fractional channel the
+   two wrap on different cycles, and when the sawtooth period is 2× or 4× the
+   64-cycle window (bits 7 and 8 here) each window caught one wrap and not the
+   other. The result was a ±390 kHz square wave of false corrections that
+   railed the detector, which in turn kept the FLL from ever switching off.
+
+Defects 2 and 3 only exist in fractional channels, like six of the eight
+defects in the main README; defect 1 only when the oscillator starts fast.
+Acquisition over fractional bits 0 and 2–14 at −30, 0 and +30 MHz, two seeds
+each:
+
+| | before | after |
+|---|---|---|
+| sky130 point: cells not fully locked | 16 / 42 | 0 / 42 |
+| paper design point: cells not fully locked | 7 / 42 | 0 / 42 |
+| typical time to lock | up to ~5000 cycles | 20 – 300 cycles |
+
+`f_REF/12.5` gear now locks on every seed with each perturbation that used to
+break it; the spec keeps `f_REF/25` so the budget stays comparable. The
+paper-reproduction numbers do not move: all 266 existing tests pass unchanged,
+and the quick-start run gives the same jitter, FoM and spur, its FLL handing
+over three cycles earlier. In steady lock the edge stays within a period of
+REF and the residue stays in range, where none of the three changes acts.
+
+**The tolerance budget does not move.** Regenerated with the fixes, all five
+limits come out the same. What changes is underneath them: every sweep point
+up to its limit now locks on every seed, the `adc_sigma_cap = 0.01` race is
+gone, and `dac_gain_err` at 0.4 % and 0.8 %, which used to lose lock on every
+seed at −28 dBc, now locks and simply follows the spur slope (−57 and −51 dBc).
+The limits were spur-set all along. The two lock failures left are far past
+their limits — `dac_settle_tau` from 6 ns and `ramp_nl2` at 0.05 /V — and look
+like genuine edges of the design.
+
+The same defects had also made the main README's dataset caveat wrong: see
+"Where the loop locks, the labels are accurate" there.
 
 ## Next
 
@@ -297,7 +344,6 @@ in Next.
 5. Draw the proven topologies in xschem, then lay out in magic with DRC/LVS.
    The ramp sink is laid out (`layout/`), DRC and LVS clean, with post-layout
    corners. It has no xschem schematic yet, since LVS runs against a
-   hand-written reference netlist. The other blocks wait on items 4 and 6.
-6. Widen the acquisition margin. The loop currently sits close enough to its
-   limit that individual sweep points lose lock; that is a design problem the
-   multi-seed reduction hides rather than solves.
+   hand-written reference netlist. The other blocks wait on item 4.
+6. ~~Widen the acquisition margin.~~ Not a design problem — three simulator
+   defects, fixed; see "Acquisition" above.

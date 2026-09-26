@@ -100,11 +100,21 @@ class FrequencyLockLoop:
     and never notices.  Averaging over ``window`` cycles divides the
     quantisation by ``window`` and brings the correction back inside the
     capture range.
+
+    *The accumulator starts at ``-phase_offset``*, the V_OS margin in PD
+    periods.  In lock the oscillator sits at ``Phi_R - phase_offset`` (see
+    :mod:`fdvadpll.pll`), so that is what the counter reads the floor of; an
+    accumulator without the offset floors on different cycles in a fractional
+    channel.  When the sawtooth period is a small multiple of ``window``, each
+    window then catches one of the two wraps but not the other, alternately,
+    and the FLL reads a +-1/``window`` error that is not there -- a square
+    wave of frequency kicks that rails the detector, which in turn keeps the
+    FLL from ever switching off.
     """
 
     def __init__(self, design: DesignParams, gain_freq: float = 0.25,
                  gain_phase: float = 0.02, settle_cycles: int = 256,
-                 window: int = 64):
+                 window: int = 64, phase_offset: float = 0.0):
         self.design = design
         self.fcw_pd = design.fcw_pd
         self.gain_freq = gain_freq
@@ -116,7 +126,7 @@ class FrequencyLockLoop:
         self.enabled = True
         self._in_range = 0
         self.disabled_at: int | None = None
-        self._expected = 0.0            # accumulated ideal CKVd phase
+        self._expected = -phase_offset  # accumulated ideal CKVd phase
         self._prev_expected_int = 0
         self._n = 0
         self._out = 0.0                 # held between measurements

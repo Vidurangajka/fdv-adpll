@@ -8,18 +8,23 @@ actually sees, and converted to output (CKV) cycles at the end.
     Phi_R[k]  ideal accumulated CKVd phase at reference edge k, = k * FCW_pd.
               Kept as an exact integer + fractional pair so that deep
               fractional channels (2**-16) stay bit-accurate over 10**6 cycles.
-    n_edge    index of the first CKVd edge strictly after REF -- the edge the
-              clock gate passes to the ramp (CKVdg).
+    n_edge    index of the CKVd edge the reference accumulator predicts --
+              the edge the clock gate passes to the ramp (CKVdg).  In lock it
+              is the first edge after REF; during acquisition it can be many
+              periods either side.
     Phi_V[k]  actual CKVd phase at REF edge k = n_edge - dt/T_PD.
 
-The phase error the loop acts on is ``Phi_R - Phi_V``, which splits cleanly into
+The phase error the loop acts on is ``Phi_R - Phi_V``.  The ramp measures
+``dt`` on edge n_edge itself, so
 
-    integer part    n_slip = ceil(Phi_R) - n_edge       (from the counter)
-    fractional part -err_time / T_PD                    (from the FDVPD)
+    in range   -err_time / T_PD is the whole error      (from the FDVPD)
+    railed     the rail, moved into the one-cycle interval the counter
+               allows                                   (FDVPD + counter)
 
 Writing it this way means the simulation never has to special-case the
-wrap that happens when the fractional accumulator rolls over: the counter
-resolves it, exactly as it does in hardware.
+wrap that happens when the fractional accumulator rolls over: the residue
+is continuous through it, and the counter only steps in once the residue
+has left the ADC's range.
 """
 
 from __future__ import annotations
@@ -235,7 +240,8 @@ class FdvPll:
                      else 0.5 * t_pd_ideal)
         pd.prime(n, mean_t_on=mean_t_on)
         dlf = DigitalLoopFilter(d, iir_poles=self.iir_poles)
-        fll = FrequencyLockLoop(d) if self.integer_path == "fll" else None
+        fll = (FrequencyLockLoop(d, phase_offset=delta)
+               if self.integer_path == "fll" else None)
 
         cal_g = (PdGainCalibration(mu=self.cal_mu.get("gain", 2e-3))
                  if "gain" in self.calibrate else None)
@@ -294,16 +300,17 @@ class FdvPll:
             else:
                 count = n_edge
             dt = t_edge - t_ref
-            # Integer part of the phase error.  The ``-1`` applies only while
-            # the predicted edge really does follow REF: the phase detector
-            # measures ``dt`` continuously *through* zero, so once the edge
-            # slips just ahead of REF the counter would otherwise report a
-            # whole extra cycle that the residue has already accounted for.
-            # That double count is invisible in an integer channel -- the ramp
-            # window never goes near zero there -- but in a fractional one the
-            # window sweeps through zero every sawtooth period and injects a
-            # full-cycle kick each time.
-            n_slip = n_exp - count - (1 if dt > 0.0 else 0)
+            # Edges are only generated up to the predicted one, so when the
+            # oscillator runs ahead by more than a period the edges between it
+            # and REF do not exist yet -- but they have happened, and the
+            # counter counts them.  Without this the counter pins at n_exp,
+            # the FLL reads zero frequency error, and a fast oscillator is
+            # acquired by the railed detector's sign alone: at the sky130 point
+            # a +30 MHz start took 12x longer than -30 MHz and mostly failed in
+            # a fractional channel.  Whole periods only, so it is exactly zero
+            # in lock.
+            if dt <= -t_pd:
+                count += int(-dt * dco.f_dco / div)
 
             # -- phase detection ---------------------------------------------
             tf = t_frac_norm
@@ -313,9 +320,43 @@ class FdvPll:
                 tf = cal_inl.correct(tf, int(round(tf * pd.dac.n_codes)))
             s = step_pd(dt, tf)
 
+            # Integer part of the phase error.  The ramp measures ``dt`` on
+            # edge n_exp itself, continuously through zero and through one
+            # period, so while the SAR is in range the residue IS the whole
+            # phase error -- Phi_R - Phi_V = dt/T_PD - t_frac -- and there is
+            # no integer part left over.  Adding a counter-derived one anyway
+            # double counts whenever the window sits near either end: just
+            # past zero the counter reports an extra edge, and with T_frac
+            # just under one period a few ps of lag put edge n_exp-1 after REF
+            # too, so it reports one fewer.  Both are invisible in an integer
+            # channel, whose window never goes near either end; in a
+            # fractional one the window sweeps both every sawtooth period, and
+            # the far-end kick alone could hold the loop frequency-locked but
+            # railed ~75 % of the time, never handing over from the FLL.
+            #
+            # Once the ADC rails, two things are known: the rail says which
+            # side of the linear range the error is on, and ``c`` edges
+            # between edge n_exp and REF put it in the one-cycle interval
+            # (c - 1 - t_frac, c - t_frac].  The estimate is the point of that
+            # interval nearest the rail.  Near lock -- where almost every
+            # railed sample is, just past a window end -- that is the rail
+            # itself or within a few per cent of the truth; far out it is up
+            # to a cycle short but always correctly signed, equally on both
+            # sides.  ``n_exp - count - [dt > 0]`` read a leading oscillator up
+            # to a cycle short and a lagging one right, so a fast start
+            # acquired several times slower than an equally slow one; and
+            # near the far window end it read an error of a few per cent as a
+            # whole cycle.  The interval midpoint has the same flaw at both
+            # ends.  Either kick, once per sawtooth period, is enough to hold
+            # some fractional channels in a railed limit cycle.
             phi_ckvd = -s.error_time / t_pd
-            if self.integer_path != "none":
-                phi_ckvd += n_slip
+            n_slip = 0
+            if s.saturated and self.integer_path != "none":
+                c = n_exp - count
+                lo, hi = c - 1 - t_frac_norm, c - t_frac_norm
+                est = min(max(phi_ckvd, lo), hi)
+                n_slip = int(round(est - phi_ckvd))
+                phi_ckvd = est
             phi_e = div * phi_ckvd                    # output CKV cycles
 
             # -- loop ---------------------------------------------------------

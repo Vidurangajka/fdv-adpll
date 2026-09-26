@@ -205,6 +205,32 @@ def test_fll_error_goes_to_zero_in_a_fractional_channel(design):
     assert max(abs(o) for o in outs[50:]) < 1e-9
 
 
+@pytest.mark.parametrize("bit", [6, 7, 8])
+def test_fll_reads_zero_when_locked_behind_the_vos_margin(design, bit):
+    """Regression: the FLL must floor the same phase the counter does.
+
+    In lock the oscillator sits one V_OS margin behind Phi_R, so the counter
+    reads floor(Phi_R - delta).  An accumulator that floors Phi_R itself wraps
+    on different cycles, and when the sawtooth period is 2x or 4x the window
+    (bits 7 and 8 at window 64) every window catches one wrap but not the
+    other: the FLL reads a +-1/64 error that is not there, rails the detector
+    with it, and never switches off.
+    """
+    d = replace(design, fcw=design.fcw - 2.0 ** -bit * design.fb_div)
+    delta = 0.15
+    fll = FrequencyLockLoop(d, phase_offset=delta, settle_cycles=10 ** 9)
+    blind = FrequencyLockLoop(d, settle_cycles=10 ** 9)
+    phase = -delta
+    outs, blind_outs = [], []
+    for k in range(2048):
+        outs.append(fll.step(math.floor(phase), True, k))
+        blind_outs.append(blind.step(math.floor(phase), True, k))
+        phase += d.fcw_pd
+    assert max(abs(o) for o in outs[128:]) < 1e-9
+    if bit in (7, 8):
+        assert max(abs(o) for o in blind_outs[128:]) > 1e-3
+
+
 def test_fll_switches_off_once_the_adc_stays_in_range(design):
     fll = FrequencyLockLoop(design, settle_cycles=16)
     count = 0

@@ -85,10 +85,12 @@ def sky130_design() -> DesignParams:
         dco=replace(d.dco, f_center=1.0e9, pn_1mhz=-118.0,
                     f_corner_flicker=300e3, kdco=50e3),
         ref=replace(d.ref, f_ref=50e6, pn_floor=-158.0),
-        # Gear bandwidth is f_REF/25.  A wider gear (f_REF/12.5) acquires this
-        # point only marginally: it locks with ideal devices and then fails to
-        # acquire at all once any perturbation is added, which shows up as a
-        # non-monotonic "tolerance" that is really an acquisition race.
+        # Gear bandwidth is f_REF/25.  A wider gear (f_REF/12.5) once looked
+        # marginal here -- it locked with ideal devices and failed to acquire
+        # once any perturbation was added -- but that was three defects in
+        # the simulator's integer path, not the design (silicon/README.md).
+        # With them fixed it acquires as well; f_REF/25 is kept so the budget
+        # stays comparable with earlier runs.
         loop=replace(d.loop, bandwidth=1e6, damping=1.0, gear_bandwidth=2e6),
         power=replace(d.power, vdd=1.8, vdd_dco=1.8),
     )
@@ -155,11 +157,12 @@ def operating_point(d: DesignParams) -> dict:
 
 
 # --------------------------------------------------------------------------
-#: Acquisition at this operating point takes about 3500 reference cycles --
-#: the frequency-lock loop hands over late in a fractional channel, because
-#: every saturated sample restarts its in-range counter.  The default discard
-#: of n/8 would leave the transient inside the measurement window and report a
-#: spur for a loop that has not settled, so every run here discards a quarter.
+#: Acquisition at this operating point used to take up to about 3500 reference
+#: cycles in a fractional channel, which the default discard of n/8 would have
+#: left inside the measurement window.  It now takes a few hundred -- the late
+#: handovers were simulator defects, not the design -- but a quarter is still
+#: discarded, so a slow draw cannot report a spur for a loop that has not
+#: settled.
 MIN_CYCLES = 1 << 16
 DISCARD_FRACTION = 4
 

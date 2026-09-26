@@ -111,6 +111,42 @@ def test_fll_acquires_a_large_initial_frequency_error():
     assert np.mean(r.f_dco[r.discard:]) == pytest.approx(r.f_ckv, rel=1e-5)
 
 
+def _last_railed(result) -> int:
+    rail = np.nonzero(result.saturated)[0]
+    return int(rail[-1]) + 1 if len(rail) else 0
+
+
+def test_a_fast_oscillator_is_acquired_as_quickly_as_a_slow_one():
+    """Regression: the counter was blind to an oscillator running ahead.
+
+    Edges were generated only up to the predicted one, so a leading
+    oscillator's extra edges were never counted, the FLL read zero error, and
+    only the railed detector's sign pulled it in: +30 MHz took 6x as long as
+    -30 MHz.  The integer estimate on a railed sample was lopsided the same
+    way.
+    """
+    slow = FdvPll(default_design(), seed=2, f_init_offset=-30e6).run(1 << 15)
+    fast = FdvPll(default_design(), seed=2, f_init_offset=+30e6).run(1 << 15)
+    assert not fast.saturated[fast.discard:].any()
+    assert _last_railed(fast) < 2 * _last_railed(slow)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("bit", range(2, 15))
+def test_every_fractional_channel_acquires(bit):
+    """Regression: bits 11-13 used to sit in a railed limit cycle.
+
+    The detector measures ``dt`` on the predicted edge through both ends of
+    its window, so an in-range residue already holds the whole phase error;
+    the counter's integer was added on top and double counted there, once per
+    sawtooth period.
+    """
+    r = FdvPll(fractional_design(bit), seed=1).run(1 << 14)
+    assert r.fll_disabled_at is not None
+    assert r.cycle_slips == 0
+    assert not r.saturated[r.discard:].any()
+
+
 def test_adc_saturates_before_it_locks():
     """The bang-bang regime the counter path exists to shorten."""
     r = FdvPll(default_design(), seed=2, f_init_offset=-30e6).run(1 << 15)

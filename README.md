@@ -45,12 +45,15 @@ DPLL](https://claude.ai/artifact/KtZU5YPiCFHPCyr2bFgeLV)**; in brief:
    Before repair the model matched the paper's *integer-N* numbers to 3 % while
    producing 51.6 ns in the fractional channel it was meant to reproduce at
    101 fs.
-3. **Analytic PLL labels need two warnings attached.** The s-domain model has no
-   representation of lock at all, and where the loop does lock its jitter is
-   optimistic by a factor that grows with loop bandwidth. Both are quantified
-   under [Design-space dataset](#design-space-dataset), along with a derived
-   capture-margin feature that makes the analytic model lock-aware enough to
-   filter on.
+3. **Analytic PLL labels need a lock warning attached.** The s-domain model has
+   no representation of lock at all, so the dataset carries a derived
+   capture-margin feature that makes it lock-aware enough to filter on. Where
+   the loop does lock, the analytic jitter is within 3 % of the simulator
+   across the space. An earlier version of this README reported it up to 4.65×
+   optimistic; that gap turned out to be three acquisition defects in the
+   simulator, all in the fractional or leading-oscillator cases an integer-N
+   comparison never exercises. Details under
+   [Design-space dataset](#design-space-dataset).
 4. **The model is design entry, not documentation.** `silicon/` generates a
    sky130A specification from the same code that reproduces the measurements,
    with tolerance limits measured at loop level. See
@@ -82,7 +85,7 @@ print(res.summary())
   FoM                : -252.3 dB @ 9.2 mW
   worst spur         : -72.8 dBc @ 10.5 kHz
   cycle slips        : 0
-  FLL off at         : cycle 276 (3.45 us)
+  FLL off at         : cycle 273 (3.41 us)
 ```
 
 For the analytic model alone:
@@ -160,25 +163,32 @@ the model — a minimum capture margin and a bandwidth ceiling — both measured
 cross-checking Sobol samples against the simulator. `--profile wide` drops them
 if you want to learn where the envelope is.
 
-**The labels are optimistic, and how much depends on loop bandwidth.**
-Cross-checking 48 feasible rows with the event-driven simulator: 38 locked
-(79 %), and on those the simulated jitter ran
+**Where the loop locks, the labels are accurate.** Cross-checking the same 48
+feasible rows (`--sim 48`, seed 0) with the event-driven simulator:
 
-| loop bandwidth | median sim / analytic |
-|---|---|
-| < 200 kHz | 1.50× |
-| 200 kHz – 500 kHz | 4.65× |
-| ≥ 500 kHz | 4.54× |
+| | before the acquisition fixes | now |
+|---|---|---|
+| locked | 38 / 48 | 48 / 48 |
+| median sim / analytic, bandwidth < 200 kHz | 1.50× | 0.97× |
+| 200 kHz – 500 kHz | 4.65× | 0.98× |
+| ≥ 500 kHz | 4.54× | 1.01× |
+| within 1.5× | 12 / 38 | 48 / 48 |
 
-12 of 38 within 1.5×, 25 of 38 within 3×. The likely cause is that
-`loop_transfer` is a continuous-time approximation of a loop that is actually
-sampled at `f_REF`; the prototype sits at 500 kHz and agrees to 3 %, but that
-agreement does not survive moving the other parameters far off nominal. It is
-*not* driven by the fractional word — deep fractional channels were, if
-anything, better. Treat the analytic labels as a fast, smooth, systematically
-optimistic surrogate rather than ground truth, and use `--sim` to re-measure
-the bias on whatever region you care about. (38 points is a small sample;
-these are indicative.)
+This section used to say the labels were systematically optimistic by a factor
+growing with bandwidth, and blamed `loop_transfer` being a continuous-time
+approximation of a sampled loop. That explanation was wrong. The gap was three
+defects in the *simulator's* integer phase path, which left loops railed or
+limit-cycling while still reporting a jitter figure; see
+[`silicon/README.md`](silicon/README.md#acquisition-three-simulator-defects-not-a-thin-margin).
+The analytic model was right all along. (48 points is still a small sample;
+use `--sim` on the region you care about.)
+
+**The two lock constraints are now conservative.** They were measured with the
+same defective simulator. Of 48 rows that only these constraints reject, 20 of
+the 23 rejected for bandwidth above 1 MHz lock now (4 before), and 13 of the 25
+rejected for capture margin below 6 do (0 before). The margin constraint is
+still partly real — 5 of the 15 rows below a margin of 3 lock — but both
+thresholds want re-deriving before they are trusted to shape a dataset.
 
 **Other caveats** are listed in the `.meta.json`, notably that the oscillator's
 power is not modelled, so `fom_db` is a detector figure of merit rather than a
