@@ -1,0 +1,505 @@
+VERSION 5.8 ;
+DIVIDERCHAR "/" ;
+BUSBITCHARS "[]" ;
+DESIGN fdvpd_ctrl ;
+UNITS DISTANCE MICRONS 1000 ;
+DIEAREA ( 0 0 ) ( 205000 110000 ) ;
+PINS 124 ;
+    - trim[0] + NET trim[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 11730 109500 ) N ;
+    - trim[1] + NET trim[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 14490 109500 ) N ;
+    - trim[2] + NET trim[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 17710 109500 ) N ;
+    - trim[3] + NET trim[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 20470 109500 ) N ;
+    - trim[4] + NET trim[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 23690 109500 ) N ;
+    - trim[5] + NET trim[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 63250 109500 ) N ;
+    - trim[6] + NET trim[6] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 66470 109500 ) N ;
+    - dsw[0] + NET dsw[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 71990 109500 ) N ;
+    - dswb[0] + NET dswb[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 72910 109500 ) N ;
+    - dsw[1] + NET dsw[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 74750 109500 ) N ;
+    - dswb[1] + NET dswb[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 75670 109500 ) N ;
+    - dsw[2] + NET dsw[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 77970 109500 ) N ;
+    - dswb[2] + NET dswb[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 78890 109500 ) N ;
+    - dsw[3] + NET dsw[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 80730 109500 ) N ;
+    - dswb[3] + NET dswb[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 81650 109500 ) N ;
+    - dsw[4] + NET dsw[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 83950 109500 ) N ;
+    - dswb[4] + NET dswb[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 84870 109500 ) N ;
+    - dsw[5] + NET dsw[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 89010 109500 ) N ;
+    - dswb[5] + NET dswb[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 89930 109500 ) N ;
+    - dsw[6] + NET dsw[6] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 92230 109500 ) N ;
+    - dswb[6] + NET dswb[6] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 93150 109500 ) N ;
+    - dsw[7] + NET dsw[7] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 94990 109500 ) N ;
+    - dswb[7] + NET dswb[7] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 96370 109500 ) N ;
+    - dsw[8] + NET dsw[8] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 98210 109500 ) N ;
+    - dswb[8] + NET dswb[8] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 99130 109500 ) N ;
+    - dsw[9] + NET dsw[9] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 100970 109500 ) N ;
+    - dswb[9] + NET dswb[9] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 102350 109500 ) N ;
+    - dsw[10] + NET dsw[10] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 104190 109500 ) N ;
+    - dswb[10] + NET dswb[10] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 105110 109500 ) N ;
+    - dsw[11] + NET dsw[11] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 106950 109500 ) N ;
+    - dswb[11] + NET dswb[11] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 108330 109500 ) N ;
+    - dsw[12] + NET dsw[12] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 110170 109500 ) N ;
+    - dswb[12] + NET dswb[12] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 111090 109500 ) N ;
+    - dsw[13] + NET dsw[13] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 150190 109500 ) N ;
+    - dswb[13] + NET dswb[13] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 151110 109500 ) N ;
+    - dsw[14] + NET dsw[14] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 152950 109500 ) N ;
+    - dswb[14] + NET dswb[14] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 153870 109500 ) N ;
+    - dsw[15] + NET dsw[15] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 156170 109500 ) N ;
+    - dswb[15] + NET dswb[15] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 157090 109500 ) N ;
+    - dsw[16] + NET dsw[16] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 158930 109500 ) N ;
+    - dswb[16] + NET dswb[16] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 159850 109500 ) N ;
+    - dsw[17] + NET dsw[17] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 162150 109500 ) N ;
+    - dswb[17] + NET dswb[17] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 163070 109500 ) N ;
+    - dsw[18] + NET dsw[18] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 164910 109500 ) N ;
+    - dswb[18] + NET dswb[18] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 165830 109500 ) N ;
+    - dsw[19] + NET dsw[19] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 168130 109500 ) N ;
+    - dswb[19] + NET dswb[19] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 169050 109500 ) N ;
+    - dsw[20] + NET dsw[20] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 170890 109500 ) N ;
+    - dswb[20] + NET dswb[20] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 171810 109500 ) N ;
+    - s1_n + NET s1_n + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 106420 ) N ;
+    - s2_n + NET s2_n + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 105060 ) N ;
+    - cmp_clk + NET cmp_clk + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 103700 ) N ;
+    - cmp_p + NET cmp_p + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 102340 ) N ;
+    - cmp_n + NET cmp_n + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 100980 ) N ;
+    - bpos[0] + NET bpos[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 99620 ) N ;
+    - bpos[1] + NET bpos[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 98260 ) N ;
+    - bpos[2] + NET bpos[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 96900 ) N ;
+    - bpos[3] + NET bpos[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 95540 ) N ;
+    - bpos[4] + NET bpos[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 94180 ) N ;
+    - bpos[5] + NET bpos[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 92820 ) N ;
+    - bneg[0] + NET bneg[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 91460 ) N ;
+    - bneg[1] + NET bneg[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 90100 ) N ;
+    - bneg[2] + NET bneg[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 88740 ) N ;
+    - bneg[3] + NET bneg[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 87380 ) N ;
+    - bneg[4] + NET bneg[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 86020 ) N ;
+    - bneg[5] + NET bneg[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 84660 ) N ;
+    - bmid[0] + NET bmid[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 83300 ) N ;
+    - bmid[1] + NET bmid[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 81940 ) N ;
+    - bmid[2] + NET bmid[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 80580 ) N ;
+    - bmid[3] + NET bmid[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 79220 ) N ;
+    - bmid[4] + NET bmid[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 77860 ) N ;
+    - bmid[5] + NET bmid[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met3 ( -500 -300 ) ( 500 300 )
+        + FIXED ( 204500 76500 ) N ;
+    - rst_n + NET rst_n + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 4830 500 ) N ;
+    - ref_clk + NET ref_clk + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 8510 500 ) N ;
+    - ckv + NET ckv + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 12190 500 ) N ;
+    - ckvd + NET ckvd + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 16330 500 ) N ;
+    - fcw_int[0] + NET fcw_int[0] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 20010 500 ) N ;
+    - fcw_int[1] + NET fcw_int[1] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 23690 500 ) N ;
+    - fcw_int[2] + NET fcw_int[2] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 27830 500 ) N ;
+    - fcw_int[3] + NET fcw_int[3] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 31510 500 ) N ;
+    - fcw_int[4] + NET fcw_int[4] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 35190 500 ) N ;
+    - fcw_int[5] + NET fcw_int[5] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 39330 500 ) N ;
+    - fcw_int[6] + NET fcw_int[6] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 43010 500 ) N ;
+    - fcw_int[7] + NET fcw_int[7] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 46690 500 ) N ;
+    - fcw_frac[0] + NET fcw_frac[0] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 50830 500 ) N ;
+    - fcw_frac[1] + NET fcw_frac[1] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 54510 500 ) N ;
+    - fcw_frac[2] + NET fcw_frac[2] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 58190 500 ) N ;
+    - fcw_frac[3] + NET fcw_frac[3] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 62330 500 ) N ;
+    - fcw_frac[4] + NET fcw_frac[4] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 66010 500 ) N ;
+    - fcw_frac[5] + NET fcw_frac[5] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 69690 500 ) N ;
+    - fcw_frac[6] + NET fcw_frac[6] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 73370 500 ) N ;
+    - fcw_frac[7] + NET fcw_frac[7] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 77510 500 ) N ;
+    - fcw_frac[8] + NET fcw_frac[8] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 81190 500 ) N ;
+    - fcw_frac[9] + NET fcw_frac[9] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 84870 500 ) N ;
+    - fcw_frac[10] + NET fcw_frac[10] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 89010 500 ) N ;
+    - fcw_frac[11] + NET fcw_frac[11] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 92690 500 ) N ;
+    - fcw_frac[12] + NET fcw_frac[12] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 96370 500 ) N ;
+    - fcw_frac[13] + NET fcw_frac[13] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 100510 500 ) N ;
+    - fcw_frac[14] + NET fcw_frac[14] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 104190 500 ) N ;
+    - fcw_frac[15] + NET fcw_frac[15] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 107870 500 ) N ;
+    - trim_in[0] + NET trim_in[0] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 112010 500 ) N ;
+    - trim_in[1] + NET trim_in[1] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 115690 500 ) N ;
+    - trim_in[2] + NET trim_in[2] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 119370 500 ) N ;
+    - trim_in[3] + NET trim_in[3] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 123510 500 ) N ;
+    - trim_in[4] + NET trim_in[4] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 127190 500 ) N ;
+    - trim_in[5] + NET trim_in[5] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 130870 500 ) N ;
+    - trim_in[6] + NET trim_in[6] + DIRECTION INPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 134550 500 ) N ;
+    - code[0] + NET code[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 138690 500 ) N ;
+    - code[1] + NET code[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 142370 500 ) N ;
+    - code[2] + NET code[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 146050 500 ) N ;
+    - code[3] + NET code[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 150190 500 ) N ;
+    - code[4] + NET code[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 153870 500 ) N ;
+    - code[5] + NET code[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 157550 500 ) N ;
+    - code[6] + NET code[6] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 161690 500 ) N ;
+    - code_valid + NET code_valid + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 165370 500 ) N ;
+    - railed + NET railed + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 169050 500 ) N ;
+    - count_ref[0] + NET count_ref[0] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 173190 500 ) N ;
+    - count_ref[1] + NET count_ref[1] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 176870 500 ) N ;
+    - count_ref[2] + NET count_ref[2] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 180550 500 ) N ;
+    - count_ref[3] + NET count_ref[3] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 184690 500 ) N ;
+    - count_ref[4] + NET count_ref[4] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 188370 500 ) N ;
+    - count_ref[5] + NET count_ref[5] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 192050 500 ) N ;
+    - count_ref[6] + NET count_ref[6] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 195730 500 ) N ;
+    - count_ref[7] + NET count_ref[7] + DIRECTION OUTPUT + USE SIGNAL
+      + PORT
+        + LAYER met2 ( -140 -500 ) ( 140 500 )
+        + FIXED ( 199870 500 ) N ;
+END PINS
+END DESIGN

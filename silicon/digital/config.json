@@ -1,0 +1,29 @@
+{
+    "DESIGN_NAME": "fdvpd_ctrl",
+    "VERILOG_FILES": "dir::fdvpd_ctrl.v",
+    "CLOCK_PORT": "ckv",
+    "CLOCK_PERIOD": 1.0,
+    "PNR_SDC_FILE": "dir::fdvpd_ctrl.sdc",
+    "SIGNOFF_SDC_FILE": "dir::fdvpd_ctrl.sdc",
+    "FP_SIZING": "absolute",
+    "DIE_AREA": [
+        0,
+        0,
+        205,
+        110
+    ],
+    "PL_TARGET_DENSITY_PCT": 55,
+    "FP_CORE_UTIL": 40,
+    "RUN_LINTER": false,
+    "SYNTH_STRATEGY": "DELAY 1",
+    "MAX_TRANSITION_CONSTRAINT": 0.75,
+    "FP_DEF_TEMPLATE": "dir::pins.def",
+    "RSZ_CORNERS": [
+        "max_ss_100C_1v60",
+        "nom_ss_100C_1v60",
+        "min_ss_100C_1v60",
+        "nom_tt_025C_1v80"
+    ],
+    "RUN_POST_GRT_RESIZER_TIMING": true,
+    "RSZ_DONT_TOUCH_RX": "^ckvd_[qn]$"
+}
