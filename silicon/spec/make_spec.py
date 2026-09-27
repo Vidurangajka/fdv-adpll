@@ -59,6 +59,9 @@ SPUR_TARGET_DBC = -60.0
 #: the fractional channel the tolerance budget is quoted at
 FRAC_BIT = 5
 
+#: DAC load resistor (layout/idac_netlist.py); sets the DAC's unit current
+R_D = 2000.0
+
 
 # --------------------------------------------------------------------------
 def sky130_design() -> DesignParams:
@@ -72,7 +75,15 @@ def sky130_design() -> DesignParams:
         fdvpd=replace(
             d.fdvpd,
             slew_rate=0.4e-3 / 1e-12,   # 0.4 mV/ps differential
-            c_sar=1.0e-12,              # 1 pF, MIM or MOM
+            # 0.5 pF per side, with the ramp single-ended: one 200 uA sink on
+            # vn and nothing on vp.  The DAC's outputs sit at 1.4 - 1.8 V, so
+            # a PMOS source ramping vp up would have to pass VDD.  One sink of
+            # SR * C_SAR into 0.5 pF gives the same differential slope, and in
+            # this model's terms -- i_ramp = SR * C_SAR / 2 per side -- its
+            # current noise and kT/C come out identical, so the noise
+            # equations need no change.  (At 1 pF it would have taken two
+            # sinks and 800 uA of their bias.)
+            c_sar=0.5e-12,
             adc_lsb=195e-6,
             comparator_noise=150e-6,
             # 130 nm flicker is worse than the reference process; this is an
@@ -121,6 +132,8 @@ def operating_point(d: DesignParams) -> dict:
             "slew_rate_v_per_s": f.slew_rate,
             "c_sar_f": f.c_sar,
             "i_ramp_a": f.i_ramp,
+            # the hardware: one sink on vn carrying the whole differential slope
+            "i_ramp_single_ended_a": f.slew_rate * f.c_sar,
             "full_scale_diff_v": d.dac_full_scale_volt,
             "full_scale_single_ended_v": d.dac_full_scale_volt / 2,
             "v_cm_v": f.v_cm,
@@ -132,7 +145,11 @@ def operating_point(d: DesignParams) -> dict:
             "bits": f.dac_bits,
             "thermo_bits": f.dac_msb_thermo_bits,
             "binary_bits": f.dac_bits - f.dac_msb_thermo_bits,
-            "unit_current_a": f.i_ramp / (2 ** f.dac_bits),
+            # resistor-loaded, unipolar: the span 1023 * I_u * R_D is the differential
+            # full scale, so the unit current follows from the R_D chosen
+            # (2 kOhm, layout/idac_netlist.py), not from the ramp
+            "r_d_ohm": R_D,
+            "unit_current_a": d.dac_full_scale_volt / (1023 * R_D),
             "lsb_s": d.dac_lsb_time,
             "lsb_v": d.dac_lsb_volt,
         },
@@ -361,7 +378,8 @@ def render_markdown(spec: dict) -> str:
     A("|---|---|")
     A(f"| slew rate (differential) | {ramp['slew_rate_v_per_s']*1e-9:.2f} mV/ps |")
     A(f"| C_SAR | {ramp['c_sar_f']*1e12:.2f} pF |")
-    A(f"| I_R (each side) | {ramp['i_ramp_a']*1e6:.0f} uA |")
+    A(f"| ramp sink, single-ended on vn | {ramp['i_ramp_single_ended_a']*1e6:.0f} uA "
+      f"(model equivalent: {ramp['i_ramp_a']*1e6:.0f} uA per side) |")
     A(f"| full scale | {ramp['full_scale_diff_v']*1e3:.0f} mV diff "
       f"({ramp['full_scale_single_ended_v']*1e3:.0f} mV single-ended) |")
     A(f"| common mode | {ramp['v_cm_v']:.2f} V |")
@@ -374,6 +392,7 @@ def render_markdown(spec: dict) -> str:
     A("|---|---|")
     A(f"| resolution | {idac['bits']} b "
       f"({idac['thermo_bits']} b thermometer + {idac['binary_bits']} b binary) |")
+    A(f"| load R_D | {idac['r_d_ohm']/1e3:.1f} kOhm each side |")
     A(f"| unit current | {idac['unit_current_a']*1e9:.1f} nA |")
     A(f"| LSB | {idac['lsb_s']*1e12:.2f} ps = {idac['lsb_v']*1e6:.0f} uV |")
     A("")
