@@ -31,7 +31,7 @@ import numpy as np
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 
 from fdvadpll import FdvPll, fractional_design, measured_fit_design
-from _style import INK_2, SERIES, save, title, use_style
+from _style import SERIES, save, title, use_style
 
 BITS = list(range(2, 12))
 N_CYCLES = 1 << 16
@@ -54,7 +54,7 @@ def main() -> None:
     base = measured_fit_design()
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.6))
 
-    for label, short, pd_kw, run_kw, colour in CASES:
+    for label, _short, pd_kw, run_kw, colour in CASES:
         spurs, jitters = [], []
         for bit in BITS:
             d = fractional_design(bit, base)
@@ -67,16 +67,13 @@ def main() -> None:
                   f"{spurs[-1]:7.1f} dBc, {jitters[-1]:6.1f} fs")
         ax.plot(BITS, spurs, color=colour, marker="o", label=label)
         ax2.plot(BITS, jitters, color=colour, marker="o", label=label)
-        ax.annotate(short, xy=(BITS[-1], spurs[-1]), xytext=(7, 0),
-                    textcoords="offset points", fontsize=8.5, color=INK_2,
-                    va="center")
 
     title(ax, "Fractional spur",
           f"FCW_pd = 21 - 2^-Nq,  {N_CYCLES} reference cycles per point")
     ax.set_xlabel("asserted fractional bit  Nq")
     ax.set_ylabel("spur at f_frac [dBc]")
     ax.set_xticks(BITS)
-    ax.set_xlim(BITS[0] - 0.4, BITS[-1] + 1.6)   # room for the direct labels
+    ax.set_xlim(BITS[0] - 0.4, BITS[-1] + 0.4)
     ax.legend(loc="lower right")
 
     title(ax2, "Integrated jitter",
