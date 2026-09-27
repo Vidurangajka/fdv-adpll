@@ -1,0 +1,20 @@
+{
+  "title": "fdv-adpll: cross-validated models and a sky130A detector for a differential-voltage-domain fractional-N DPLL",
+  "upload_type": "software",
+  "description": "Two independent behavioural models (an s-domain noise analysis and an event-driven simulator) of the fractional-N DPLL of Wu et al. (IEEE JSSC, vol. 56, no. 4, 2021), cross-validated against each other and against the published measurements; a 16 384-point design-space dataset generator; and the phase detector specified from the model and laid out in the SkyWater sky130A open PDK, DRC clean and LVS matched, using open-source tools only. The accompanying report is docs/fdv-adpll-report.pdf.",
+  "creators": [
+    {
+      "name": "Viduranga, Anjana"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "phase-locked loop",
+    "fractional-N",
+    "digital PLL",
+    "behavioural modelling",
+    "verification",
+    "sky130",
+    "open-source silicon"
+  ]
+}

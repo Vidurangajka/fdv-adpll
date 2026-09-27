@@ -1,7 +1,7 @@
 {
   "generator": "scripts/make_dataset.py",
-  "fdvadpll_version": "1.0.0",
-  "created_utc": "2026-09-24T03:48:23Z",
+  "fdvadpll_version": "1.1.0",
+  "created_utc": "2026-09-27T14:33:05Z",
   "seed": 0,
   "profile": "realisable",
   "n_rows": 16384,

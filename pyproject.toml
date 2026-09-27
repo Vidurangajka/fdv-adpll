@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fdvadpll"
-version = "1.0.0"
+version = "1.1.0"
 description = "Behavioural model of a fractional-N DPLL with the phase error quantised in the fully differential voltage domain (Wu et al., JSSC 2021), plus an ADPLL extension"
 readme = "README.md"
 license = "MIT"

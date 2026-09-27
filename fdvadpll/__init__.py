@@ -25,7 +25,7 @@ from .pll import FdvPll, SimResult
 from .sdm import MashSdm
 from . import calib, dsp, noise
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "DesignParams", "DcoParams", "FdvpdParams", "LoopParams", "PowerParams",
