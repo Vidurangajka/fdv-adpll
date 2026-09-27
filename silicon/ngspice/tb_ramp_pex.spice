@@ -26,10 +26,13 @@ Vss vss 0 0
 Ib    vdd cbias {IREF}
 Irefc vdd nbias {IREF}
 Cc    outp 0 {CSAR}
-Vpre  pre 0 PULSE(0 {VDD} 2n 20p 20p 60n 120n)
+* precharge: an ideal switch holds outp at VDD until 2 ns (the cell has none)
+Spc   vdd outp pc 0 swpc
+.model swpc sw vt=0.9 vh=0.01 ron=10 roff=1e12
+Vpc   pc 0 PULSE({VDD} 0 2n 20p 20p 60n 120n)
 
-* port order is fixed by verify.sh: vdd vss pre outp nbias cbias
-Xdut vdd vss pre outp nbias cbias ramp_sink
+* port order is fixed by the reference's .subckt line: vss outp nbias cbias
+Xdut vss outp nbias cbias ramp_sink
 
 .tran 2p 12n
 

@@ -3,21 +3,24 @@
 * Branch C of ngspice/tb_ramp_casc.spice with the ideal sources and C_SAR
 * removed: I_R and I_b arrive on nbias / cbias, and outp drives the SAR.
 * Device sizes are the testbench's, written the way the layout draws them --
-* each 20 um device as 4 fingers of 5 um -- plus the two grounded dummies that
+* each 40 um device as 8 fingers of 5 um -- plus the two grounded dummies that
 * flank the Mr / M1c pair.  If a size changes in the testbench, change it here
 * and in ramp_sink.py; LVS is what catches the one you forgot.
+*
+* Doubled to 8 fingers a device (40 um) and no precharge PFET: the ramp is
+* current-steered by the front end's NMOS pair, whose switch has to sit
+* between this cell's output and vn -- which falls to 0.88 V -- so the sink's
+* headroom is what the switch lives on.  Half the overdrive buys ~0.1 V.
 
-.subckt ramp_sink vdd vss pre outp nbias cbias
+.subckt ramp_sink vss outp nbias cbias
 * wide-swing bias: one quarter the aspect ratio, cbias = Vth + 2 Vov
-XMwb  cbias cbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=1
+XMwb  cbias cbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=2
 * cascoded reference
-XMrc  nbias cbias nrc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
-XMr   nrc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+XMrc  nbias cbias nrc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=8
+XMr   nrc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=8
 * cascoded ramp sink
-XM1c  nxc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
-XM2c  outp  cbias nxc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=4
+XM1c  nxc   nbias vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=8
+XM2c  outp  cbias nxc vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=8
 * dummies at both ends of the Mr / M1c diffusion
 XMdum vss   vss   vss vss sky130_fd_pr__nfet_01v8 L=1 W=5 nf=1 m=2
-* precharge
-XMsw  outp  pre   vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=5 nf=1 m=4
 .ends

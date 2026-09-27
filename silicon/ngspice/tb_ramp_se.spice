@@ -1,0 +1,63 @@
+* FDVPD ramp -- the ramp_sink cell as the single-ended ramp on vn, sky130A
+*
+* The detector assembly puts ONE ramp_sink on vn and nothing on vp: the DAC's
+* outputs sit at 1.4 - 1.8 V, so a PMOS source ramping vp upward would have to
+* pass VDD.  One 200 uA sink into C_SAR = 0.5 pF per side gives the specified
+* 0.4 mV/ps on the differential residue, and in the behavioural model's terms
+* (C_SAR = 0.5 pF) its current noise and kT/C come out identical.
+*
+* What changes for the cell: the swing.  vn starts at V_outn (1.4 - 1.8 V) and
+* ramps for dt = T_frac + 300 ps, up to 2.3 ns: from 1.8 V down to 0.88 V at the
+* top code, against 420 mV into 1 pF when the cell was characterised.  This
+* testbench releases from VDD and runs the full 2.3 ns -- the worst case for
+* both curvature and the cascode's headroom.
+*
+*   RAMP_NETLIST   layout/ramp_sink_ref.spice (schematic) or the extracted
+*                  layout/build/ramp_sink_pex.spice, substituted by
+*                  ngspice/ramp_se.sh along with the corner
+*
+* nl2 is the behavioural model's ramp_nl2, referred to the differential
+* excursion -- which, single-ended, is the excursion on vn itself:
+*   slope(E) = SR (1 + 2 nl2 E)  ->  nl2 = droop / (2 SR * 1 ns)
+* for two 1 ns windows 1 ns apart.
+
+.lib /foss/pdks/sky130A/libs.tech/ngspice/sky130.lib.spice tt
+.include RAMP_NETLIST
+.temp 27
+
+.param VDD  = 1.8
+.param IREF = 200u
+.param CSAR = 500f
+
+Vdd vdd 0 {VDD}
+Vss vss 0 0
+Irefc vdd nbias {IREF}
+Ib    vdd cbias {IREF}
+Xr vss vn nbias cbias ramp_sink
+Cvn vn 0 {CSAR}
+
+* precharge holds vn at VDD, released at 2 ns (= REF): an ideal switch -- the
+* cell has no precharge device of its own since the front end steers its current
+Spc vdd vn pc 0 swpc
+.model swpc sw vt=0.9 vh=0.01 ron=10 roff=1e12
+Vpc pc 0 PULSE({VDD} 0 2n 20p 20p 60n 120n)
+
+.tran 2p 6n
+
+* windows: 0.3 -> 1.3 ns and 1.3 -> 2.3 ns after release, i.e. from the V_OS
+* margin to the end of the longest ramp
+.meas tran va FIND v(vn) AT=2.3n
+.meas tran vb FIND v(vn) AT=3.3n
+.meas tran vc FIND v(vn) AT=4.3n
+.meas tran sr_early PARAM='(va-vb)/1n'
+.meas tran sr_late  PARAM='(vb-vc)/1n'
+.meas tran droop_pct PARAM='100*(sr_early-sr_late)/sr_early'
+.meas tran nl2 PARAM='(sr_early-sr_late)/sr_early/(2*sr_early*1n)'
+.meas tran v_end FIND v(vn) AT=4.3n
+.meas tran v_nxc FIND v(xr.nxc) AT=4.3n
+.meas tran casc_margin PARAM='v_end-v_nxc'
+
+.control
+run
+.endc
+.end

@@ -10,13 +10,18 @@ Draws the wide-swing cascode ramp sink that ngspice/tb_ramp_casc.spice proved
     somebody else's layout.
 
     device  W/L         nf x W_f   S     G      D      notes
-    Mr      20 / 1      4 x 5      vss   nbias  nrc    matched pair, ABBA
-    M1c     20 / 1      4 x 5      vss   nbias  nxc    matched pair, ABBA
-    Mrc     20 / 1      4 x 5      nrc   cbias  nbias  cascode, reference
-    M2c     20 / 1      4 x 5      nxc   cbias  outp   cascode, ramp
-    Mwb      5 / 1      1 x 5      vss   cbias  cbias  wide-swing bias
-    Msw     20 / 0.15   4 x 5      vdd   pre    outp   precharge (pfet)
+    Mr      40 / 1      8 x 5      vss   nbias  nrc    matched pair, ABBA ABBA
+    M1c     40 / 1      8 x 5      vss   nbias  nxc    matched pair, ABBA ABBA
+    Mrc     40 / 1      8 x 5      nrc   cbias  nbias  cascode, reference
+    M2c     40 / 1      8 x 5      nxc   cbias  outp   cascode, ramp
+    Mwb     10 / 1      2 x 5      vss   cbias  cbias  wide-swing bias
     Mdum     5 / 1      2 x 5      vss   vss    vss    dummies around Mr/M1c
+
+There is no precharge device: the front end steers this cell's current into
+vn or VDD with an NMOS pair, so the cell is a plain sink and ``outp`` stays
+near 0.7 V.  The devices are twice the width they were for the same current
+-- half the overdrive -- because that switch sits between ``outp`` and vn,
+and vn falls to 0.88 V: every millivolt the sink needs, the switch loses.
 
 Mr and M1c are the only pair whose matching the testbench measures (the 3.7 mV
 `mirror_match`), so they are the ones drawn common-centroid: one diffusion,
@@ -26,7 +31,6 @@ end so every active finger sees the same poly neighbourhood.
 Floorplan, bottom to top -- each row has its S/D routing tracks (m2) below it
 and its gate bar (m1) above it, so the two never cross:
 
-    [ n-ring / nwell ]  row 3  Msw
     [ p-ring         ]  row 2  Mrc | M2c | Mwb
                         row 1  Mdum Mr M1c M1c Mr Mdum
     routing channel on the right: one m3 vertical per inter-row net
@@ -278,23 +282,23 @@ def build():
     top = ly.create_cell(CELL)
     d = Drawer(ly, top)
 
-    W, L_N, L_P = 5000, 1000, 150
+    W, L_N = 5000, 1000
 
-    # ---- row 1: Mdum Mr M1c M1c Mr Mdum, one diffusion, shared sources
-    r1_cols = ["vss", "vss", "nrc", "vss", "nxc", "vss",
-               "nxc", "vss", "nrc", "vss", "vss"]
-    r1 = Row(d, 0, 0, W, L_N, "nbias", [(r1_cols, {0, 9})])
+    # ---- row 1: Mdum, Mr M1c M1c Mr twice, Mdum -- one diffusion, shared sources
+    abba = ["nrc", "vss", "nxc", "vss", "nxc", "vss", "nrc", "vss"]
+    r1_cols = ["vss", "vss"] + abba * 2 + ["vss"]
+    r1 = Row(d, 0, 0, W, L_N, "nbias", [(r1_cols, {0, len(r1_cols) - 2})])
 
     # ---- row 2: Mrc | M2c | Mwb, three diffusions under one cbias gate bar
-    r2_diffs = [(["nrc", "nbias", "nrc", "nbias", "nrc"], set()),
-                (["nxc", "outp", "nxc", "outp", "nxc"], set()),
-                (["vss", "cbias"], set())]
+    r2_diffs = [(["nrc", "nbias"] * 4 + ["nrc"], set()),
+                (["nxc", "outp"] * 4 + ["nxc"], set()),
+                (["vss", "cbias", "vss"], set())]
     probe = Row(d, 0, 0, W, L_N, "cbias", r2_diffs)
     r2_yb = r1.top + 600 + TRACK_0 + (len(probe.nets) - 1) * TRACK_P + M2W / 2
     r2 = Row(d, 0, snap(r2_yb), W, L_N, "cbias", r2_diffs)
 
     # ---- routing channel, right of both rows
-    chan_nets = ["nrc", "nxc", "nbias", "cbias", "outp", "pre"]
+    chan_nets = ["nrc", "nxc", "nbias", "cbias", "outp"]
     chan0 = max(r1.x1, r2.x1) + 1000
     chan = {n: chan0 + i * CHAN_P for i, n in enumerate(chan_nets)}
     x_end = chan[chan_nets[-1]] + 400
@@ -318,32 +322,14 @@ def build():
     for r in (r1, r2):
         r.tracks(r.cols[0][0] - 400, x_end, (pring_x[0], pring_x[1], {"vss"}))
 
-    # ---- row 3: precharge pfet in its own nwell + n-ring
-    r3_cols = ["vdd", "outp", "vdd", "outp", "vdd"]
-    probe = Row(d, 0, 0, W, L_P, "pre", [(r3_cols, set())])
-    r3_ring_bot = pring_box[3] + 1000 + NWELL_ENC + SDM_ENC
-    r3_yb = (r3_ring_bot + RING_TAP + RING_GAP
-             + TRACK_0 + (len(probe.nets) - 1) * TRACK_P + M2W / 2)
-    r3 = Row(d, 0, snap(r3_yb), W, L_P, "pre", [(r3_cols, set())])
-    r3.draw("psdm", chan["pre"] + 200)
-    stack(d, chan["pre"], r3.gate_y)
-    stack(d, chan["outp"], r3.track_y("outp"), from_m1=False)
-
-    n_inner = kdb.Box(inner.left, snap(r3.bottom), inner.right, snap(r3.top))
-    nring_box, nring_x = ring(d, n_inner, "nsdm", "vdd")
-    r3.tracks(r3.cols[0][0] - 400, x_end, (nring_x[0], nring_x[1], {"vdd"}))
-    d.rect("nwell", nring_box[0] - NWELL_ENC, nring_box[1] - NWELL_ENC,
-           nring_box[2] + NWELL_ENC, nring_box[3] + NWELL_ENC)
-
-    # ---- m3 verticals; the four signal ports leave through the top edge
-    y_top = nring_box[3] + NWELL_ENC + 600
+    # ---- m3 verticals; the three signal ports leave through the top edge
+    y_top = pring_box[3] + 600
     spans = {
         "nrc": (r1.track_y("nrc"), r2.track_y("nrc")),
         "nxc": (r1.track_y("nxc"), r2.track_y("nxc")),
         "nbias": (r1.gate_y, y_top),
         "cbias": (r2.track_y("cbias"), y_top),
         "outp": (r2.track_y("outp"), y_top),
-        "pre": (r3.gate_y, y_top),
     }
     for net, (ya, yb) in spans.items():
         x = chan[net]
