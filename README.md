@@ -33,7 +33,8 @@ within a few per cent of each other and on the paper's measured numbers:
 The architecture, the equations and the measurements are Wu et al.'s. What is
 new here is the *method* and what the method found. The full write-up is
 **[Cross-Validating Two Models of a Differential-Voltage-Domain Fractional-N
-DPLL](https://claude.ai/artifact/KtZU5YPiCFHPCyr2bFgeLV)**; in brief:
+DPLL](docs/fdv-adpll-report.pdf)** (PDF; source in
+[`docs/report/report.html`](docs/report/report.html)); in brief:
 
 1. **Two models, one parameter set, as a standing check.** `noise.py` and
    `pll.py` share nothing but `params.py`, so disagreement is a signal available
@@ -48,20 +49,23 @@ DPLL](https://claude.ai/artifact/KtZU5YPiCFHPCyr2bFgeLV)**; in brief:
 3. **Analytic PLL labels need a lock warning attached.** The s-domain model has
    no representation of lock at all, so the dataset carries a derived
    capture-margin feature that makes it lock-aware enough to filter on. Where
-   the loop does lock, the analytic jitter is within 3 % of the simulator
-   across the space. An earlier version of this README reported it up to 4.65×
+   the loop does lock, the analytic jitter matches the simulator: median ratio
+   within 3 % in every bandwidth bin, 43 of 48 cross-checked points within 10 %. An earlier version of this README reported it up to 4.65×
    optimistic; that gap turned out to be three acquisition defects in the
    simulator, all in the fractional or leading-oscillator cases an integer-N
    comparison never exercises. Details under
    [Design-space dataset](#design-space-dataset).
 4. **The model is design entry, not documentation.** `silicon/` generates a
    sky130A specification from the same code that reproduces the measurements,
-   with tolerance limits measured at loop level. See
-   [`silicon/README.md`](silicon/README.md).
-5. **Two silent verification failures, reported rather than quietly fixed** — a
-   circuit that met every performance target while biased above its supply, and
-   a tolerance sweep that quoted the first *failing* value as the permitted one.
-   Both are in `silicon/README.md`; both now have a guard.
+   with tolerance limits measured at loop level, and then builds the detector
+   to it: current DAC, ramp sink, bias, SAR front end and a LibreLane control
+   macro, 510 × 495 µm, DRC clean and LVS matched at top level, with open-source
+   tools only. See [`silicon/README.md`](silicon/README.md).
+5. **Silent verification failures, reported rather than quietly fixed** — a
+   circuit that met every performance target while biased above its supply, a
+   tolerance sweep that quoted the first *failing* value as the permitted one,
+   and a timing run that reported setup met while 129 register pins went
+   unclocked. All are in `silicon/README.md`; all now have a guard.
 
 ## Install
 
@@ -100,6 +104,19 @@ L = noise.output_phase_noise(d, f, frac_bit=5)
 print(noise.integrated_jitter(f, L, d.f_ckv) * 1e15, "fs")
 print(noise.pd_noise_floor(d, frac_bit=5))
 ```
+
+## Reproducing the report
+
+```bash
+python scripts/reproduce.py          # tests, figures, dataset, spec, PDF; ~15 min
+python scripts/reproduce.py --fast   # the quick versions of each, a few minutes
+```
+
+`reproduce.py` regenerates every host-side figure, table and number in the
+report and reprints `docs/fdv-adpll-report.pdf` (headless Chrome or Edge,
+`scripts/build_report.py`). The sky130A layout and circuit results need the
+IIC-OSIC-TOOLS container; their outputs are committed and the script lists the
+command behind each.
 
 ## Figures
 
@@ -249,7 +266,7 @@ banks with sigma-delta dither; background gain, INL and K_DCO calibration.
 ## Tests
 
 ```bash
-pytest                       # 266 tests, ~85 s
+pytest                       # 283 tests, a few minutes
 pytest -m "not slow"         # skip the 20 full-length simulation runs, ~23 s
 ```
 

@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Source of docs/fdv-adpll-report.pdf; rebuild with scripts/build_report.py -->
+<title>FDV-ADPLL Reproduction Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+
+<style>
+:root{
+  --ground:#fcfcfc;
+  --plane:#f4f5f6;
+  --plate:#fbfbfa;
+  --ink:#14171a;
+  --ink-2:#4a5157;
+  --muted:#7d858c;
+  --rule:#dfe3e6;
+  --rule-soft:#ebeef0;
+  --accent:#1c5cab;
+  --accent-soft:#e8f0fb;
+  --flag:#b4332f;
+  --flag-soft:#fbecea;
+  --ok:#1f6f43;
+  --ok-soft:#e6f2ea;
+  --measure:68ch;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101315;
+    --plane:#171b1e;
+    --plate:#f2f2f0;
+    --ink:#f2f4f5;
+    --ink-2:#b3bcc2;
+    --muted:#7d858c;
+    --rule:#262c30;
+    --rule-soft:#1e2326;
+    --accent:#6aa9f0;
+    --accent-soft:#16253a;
+    --flag:#e08b86;
+    --flag-soft:#2c1c1b;
+    --ok:#5cb887;
+    --ok-soft:#16281f;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101315;
+  --plane:#171b1e;
+  --plate:#f2f2f0;
+  --ink:#f2f4f5;
+  --ink-2:#b3bcc2;
+  --muted:#7d858c;
+  --rule:#262c30;
+  --rule-soft:#1e2326;
+  --accent:#6aa9f0;
+  --accent-soft:#16253a;
+  --flag:#e08b86;
+  --flag-soft:#2c1c1b;
+  --ok:#5cb887;
+  --ok-soft:#16281f;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding-inline:20px;
+  padding-block:0 96px;
+}
+
+/* ---- marginal rail --------------------------------------------------- */
+.band{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0 34px;
+  margin-block:0;
+}
+.band > .rail{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:12px;
+  letter-spacing:.06em;
+  color:var(--muted);
+  padding-top:.55em;
+}
+.band > .flow{min-width:0;max-width:var(--measure)}
+@media (min-width:920px){
+  .band{grid-template-columns:78px minmax(0,1fr)}
+}
+
+/* ---- masthead -------------------------------------------------------- */
+header.masthead{
+  border-bottom:2px solid var(--ink);
+  padding-block:56px 26px;
+  margin-bottom:34px;
+}
+.eyebrow{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 18px;
+}
+h1{
+  font-size:clamp(28px,4.4vw,44px);
+  line-height:1.14;
+  font-weight:700;
+  letter-spacing:-.015em;
+  text-wrap:balance;
+  margin:0 0 20px;
+  max-width:22ch;
+}
+.dateline{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:12.5px;
+  color:var(--muted);
+  margin:0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 16px;
+}
+
+/* ---- abstract -------------------------------------------------------- */
+.abstract{
+  background:var(--plane);
+  border-left:3px solid var(--accent);
+  padding:26px 28px;
+  margin-bottom:52px;
+  max-width:var(--measure);
+}
+.abstract h2{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 12px;
+}
+.abstract p{margin:0 0 .9em;font-size:16px;line-height:1.66}
+.abstract p:last-child{margin-bottom:0}
+
+/* ---- headings -------------------------------------------------------- */
+h2.sec{
+  font-size:25px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  line-height:1.24;
+  margin:0 0 14px;
+  text-wrap:balance;
+}
+h3.sub{
+  font-size:18.5px;
+  font-weight:600;
+  margin:34px 0 10px;
+  text-wrap:balance;
+}
+section.band{margin-top:52px}
+
+p{margin:0 0 1.05em}
+.flow > p:last-child{margin-bottom:0}
+a{color:var(--accent);text-underline-offset:2px}
+
+code,.m{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:.86em;
+  font-variant-numeric:tabular-nums;
+}
+code{
+  background:var(--plane);
+  padding:.1em .34em;
+  border-radius:3px;
+  color:var(--ink-2);
+}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.9em}
+
+/* ---- display equation ------------------------------------------------ */
+.eq{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:14px;
+  background:var(--plane);
+  border:1px solid var(--rule-soft);
+  border-radius:4px;
+  padding:16px 18px;
+  margin:20px 0 22px;
+  overflow-x:auto;
+  color:var(--ink);
+  line-height:1.9;
+}
+.eq .tag{float:right;color:var(--muted);font-size:12px}
+
+/* ---- tables ---------------------------------------------------------- */
+.tbl{
+  margin:26px 0 8px;
+  overflow-x:auto;
+  border-top:1.5px solid var(--ink);
+  border-bottom:1.5px solid var(--ink);
+}
+table{border-collapse:collapse;width:100%;min-width:480px}
+caption{
+  caption-side:top;
+  text-align:left;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:12.5px;
+  color:var(--ink-2);
+  padding:0 0 12px;
+  line-height:1.5;
+}
+caption b{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-weight:500;
+  color:var(--ink);
+  letter-spacing:.02em;
+}
+th,td{
+  text-align:left;
+  padding:9px 16px 9px 0;
+  border-bottom:1px solid var(--rule-soft);
+  vertical-align:top;
+  font-size:15px;
+}
+th{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--muted);
+  border-bottom:1px solid var(--rule);
+  padding-bottom:8px;
+}
+tbody tr:last-child td{border-bottom:none}
+td.n,th.n{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+  padding-right:22px;
+  white-space:nowrap;
+}
+th.n{text-align:right}
+td.lead{font-weight:600}
+.tnote{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:12.5px;
+  color:var(--muted);
+  margin:10px 0 0;
+  line-height:1.55;
+  max-width:var(--measure);
+}
+
+/* severity chips */
+.chip{
+  display:inline-block;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:3px;
+  white-space:nowrap;
+}
+.chip.blind{background:var(--flag-soft);color:var(--flag)}
+.chip.seen{background:var(--accent-soft);color:var(--accent)}
+.chip.pass{background:var(--ok-soft);color:var(--ok)}
+
+/* ---- figures --------------------------------------------------------- */
+figure{
+  margin:30px 0 8px;
+  max-width:1000px;
+}
+.plate{
+  background:var(--plate);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:10px;
+}
+.plate img{display:block;width:100%;height:auto;border-radius:1px}
+figcaption{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:12.5px;
+  color:var(--ink-2);
+  line-height:1.55;
+  margin-top:11px;
+  max-width:var(--measure);
+}
+figcaption b{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-weight:500;
+  color:var(--ink);
+  letter-spacing:.02em;
+}
+.chartbox{
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:18px 14px 10px;
+  background:var(--plane);
+  overflow-x:auto;
+}
+.chartbox svg{display:block;width:100%;height:auto;min-width:440px}
+/* chart ink: set through CSS, not presentation attributes -- var() is not
+   reliably resolved inside fill="" / stroke="" */
+.c-grid{stroke:var(--rule);stroke-width:1}
+.c-ref{stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:4 3}
+.c-axis{stroke:var(--ink-2);stroke-width:1}
+.c-bar{fill:var(--accent)}
+.c-bar-old{fill:var(--muted);opacity:.55}
+.c-rng{stroke:var(--ink-2);stroke-width:1.5}
+.c-val{fill:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;font-variant-numeric:tabular-nums}
+.c-cat{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px}
+.c-n{fill:var(--muted);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px}
+.c-tick{fill:var(--muted);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px}
+.c-note{fill:var(--ink-2);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:10.5px}
+.c-axlab{fill:var(--ink-2);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11px}
+
+/* ---- callout --------------------------------------------------------- */
+.callout{
+  border:1px solid var(--rule);
+  border-left:3px solid var(--flag);
+  background:var(--plane);
+  padding:20px 22px;
+  margin:26px 0;
+  max-width:var(--measure);
+}
+.callout h4{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--flag);
+  margin:0 0 10px;
+}
+.callout p{font-size:16px;margin-bottom:.8em}
+.callout p:last-child{margin-bottom:0}
+
+/* ---- contributions --------------------------------------------------- */
+.contrib{
+  border:1px solid var(--rule);
+  background:var(--plane);
+  padding:4px 22px 18px;
+  margin:22px 0 0;
+  max-width:var(--measure);
+}
+.contrib h4{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:20px 0 10px;
+}
+.contrib ol{margin:0;padding-left:1.3em}
+.contrib ol li{margin-bottom:.85em;line-height:1.58}
+.contrib ol li:last-child{margin-bottom:0}
+.contrib ul{margin:0;padding-left:1.3em}
+.contrib ul li{margin-bottom:.5em;line-height:1.58}
+.contrib > p{font-size:16px}
+
+/* ---- key-value strip ------------------------------------------------- */
+.kv{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;
+  background:var(--rule);
+  border:1px solid var(--rule);
+  margin:26px 0 8px;
+}
+.kv > div{background:var(--ground);padding:16px 18px}
+.kv dt{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 6px;
+}
+.kv dd{
+  margin:0;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:21px;
+  line-height:1.2;
+  color:var(--ink);
+}
+.kv dd span{font-size:12.5px;color:var(--muted);letter-spacing:.02em}
+
+/* ---- lists ----------------------------------------------------------- */
+ol.refs{
+  list-style:none;
+  counter-reset:r;
+  padding:0;
+  margin:0;
+  max-width:var(--measure);
+}
+ol.refs li{
+  counter-increment:r;
+  position:relative;
+  padding-left:34px;
+  margin-bottom:16px;
+  font-size:15.5px;
+  line-height:1.58;
+  color:var(--ink-2);
+}
+ol.refs li::before{
+  content:"[" counter(r) "]";
+  position:absolute;
+  left:0;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:13px;
+  color:var(--muted);
+}
+ul.plain{padding-left:1.15em;margin:0 0 1.05em}
+ul.plain li{margin-bottom:.5em}
+
+footer.end{
+  margin-top:72px;
+  padding-top:22px;
+  border-top:1px solid var(--rule);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:12.5px;
+  color:var(--muted);
+  max-width:var(--measure);
+  line-height:1.6;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+.byline{
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:15px;
+  color:var(--ink-2);
+  margin:0 0 14px;
+}
+.layout-pair{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:720px){.layout-pair{grid-template-columns:1fr 1fr}}
+
+/* ---- print (the PDF in docs/ is printed from this page) --------------- */
+@page{size:A4;margin:16mm 15mm 18mm}
+@media print{
+  :root{--ground:#fff;--plane:#f4f5f6}
+  body{font-size:11pt;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{max-width:none;padding:0}
+  .band{grid-template-columns:34px minmax(0,1fr)!important;gap:0 14px}
+  .band > .flow{max-width:none}
+  header.masthead{padding-block:0 18px;margin-bottom:22px}
+  h1{font-size:25pt;max-width:none}
+  section.band{margin-top:30px}
+  figure,.tbl,.kv,.callout,.chartbox,table,tr{break-inside:avoid}
+  h2.sec,h3.sub{break-after:avoid}
+  .abstract,.contrib,.callout,p,figcaption,.tnote{max-width:none}
+  .chartbox svg{min-width:0}
+  table{min-width:0}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Reproduction &amp; verification study</p>
+  <h1>Cross-Validating Two Models of a Differential-Voltage-Domain Fractional-N DPLL</h1>
+  <p class="byline">Anjana Viduranga</p>
+  <p class="dateline">
+    <span>fdv-adpll v1.1.0</span>
+    <span>283 tests</span>
+    <span>16 384-point dataset</span>
+    <span>sky130A detector, DRC / LVS clean</span>
+    <span>September 2026</span>
+  </p>
+</header>
+
+<div class="abstract">
+  <h2>Abstract</h2>
+  <p>We reproduce the fractional-N digital PLL of Wu <i>et al.</i> [1], in which the phase error is
+  quantised in the fully differential voltage domain, as two independent behavioural models: an
+  s-domain noise analysis implementing the paper's equations (1)&ndash;(13), and an event-driven
+  simulator that advances individual oscillator edges through behavioural blocks. The two share
+  nothing but a parameter set, so their disagreement is a verification signal rather than a
+  coincidence. The reproduction lands on the published measurements &mdash;
+  <span class="num">81&nbsp;fs</span> simulated and <span class="num">84&nbsp;fs</span> analytic
+  against <span class="num">82&nbsp;fs</span> measured, with one fitted parameter that the paper
+  itself identifies as missing from its analysis.</p>
+  <p>Cross-validation exposed eight defects. Six produce no observable error in integer-N operation
+  and appear only in fractional channels; the two worst inflated fractional-N jitter from
+  <span class="num">94&nbsp;fs</span> to <span class="num">51.6&nbsp;ns</span>. Three further
+  defects, in the simulator's acquisition path, surfaced later during the silicon work, and they
+  follow the same pattern: all three need a fractional channel or an oscillator that starts fast. We
+  argue that this asymmetry is structural, not incidental, and identify the mechanism behind each
+  blind spot.</p>
+  <p>We then Sobol-sample an 18-parameter design space into a 16 384-point dataset. The s-domain
+  model has no representation of lock, so the dataset carries a derived capture-margin feature to
+  filter on. Where the loop does lock, the analytic jitter labels agree with the simulator. All 48
+  cross-checked points locked, the median ratio in every bandwidth bin is within three per cent
+  of unity, and 43 of the 48 individual points are within ten per cent. An earlier version of this
+  study reported the labels as up to <span class="num">4.65&times;</span> optimistic. That gap was
+  the three acquisition defects, not the analytic model.</p>
+  <p>Finally we use the verified model as design entry. It generates a sky130A specification for
+  the detector, which we then build: a 10-bit current DAC, a ramp sink, a bias reference, a SAR
+  front end and a synthesised control macro, assembled into a 510&nbsp;&times;&nbsp;495&nbsp;&micro;m
+  layout that is DRC clean and LVS matched, with the control RTL co-simulated against the
+  transistor netlists. Failures in our own verification apparatus are reported alongside the
+  result, because each is the kind that passes silently. Examples are a circuit that met every
+  performance target while biased above its supply rail, a limit-finder that reported the first
+  <i>failing</i> sweep point as the permitted value, and a timing constraint that left
+  129 register pins untimed.</p>
+</div>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">1</div>
+  <div class="flow">
+    <h2 class="sec">What is new here, and what is not</h2>
+    <p>This is a reproduction study, so the boundary matters and is worth drawing before anything
+    else.</p>
+
+    <div class="contrib">
+      <h4>Not new &mdash; reproduced from the literature</h4>
+      <ul>
+        <li>The architecture, the operating point and the measurements are those of Wu
+        <i>et al.</i> [1]. Every measured figure quoted here is theirs.</li>
+        <li>The in-band noise analysis is their equations (1)&ndash;(13), re-implemented.</li>
+        <li>The wide-swing cascode current mirror of &sect;7 is a textbook circuit, chosen for a
+        reason particular to this design rather than invented for it.</li>
+        <li>Sobol sequences, Welch periodograms and MASH modulators are standard tools.</li>
+      </ul>
+
+      <h4>New in this work</h4>
+      <ol>
+        <li><b>Dual-model cross-validation as a standing check, not a one-off.</b> Two models of one
+        design sharing only a parameter dataclass make disagreement a signal available at every
+        change, rather than a single comparison against published numbers at the end. Reproducing a
+        paper twice costs roughly twice as much and returns something one model cannot: a
+        correctness check that does not depend on the measurements being reproduced.</li>
+
+        <li><b>The integer-N blind spot, with mechanisms.</b> Six of the first eight defects were
+        invisible in integer-N operation, and so were two of the three found later. We argue this is
+        structural rather than incidental. The simplest operating mode of a mixed-signal loop holds
+        the largest number of internal quantities constant, and a constant is exactly what a defect
+        needs in order to hide. We name the mechanisms responsible (&sect;5.1&ndash;5.2).</li>
+
+        <li><b>Lock-aware analytic PLL labels.</b> An s-domain model has no representation of lock
+        and will score a design that rails on its first cycle. We propose a derived
+        <i>capture-margin</i> feature that makes the analytic model lock-aware enough to filter a
+        dataset. Where the loop locks, we show that its labels are accurate (median within three
+        per cent, 43 of 48 points within ten), after first reporting, and then retracting, an apparent optimism of up to
+        4.65&times; (&sect;6.1&ndash;6.2).</li>
+
+        <li><b>Specification generated from the verified model.</b> The sky130A detector spec is
+        emitted by the same code that reproduces the measurements, so design entry and golden
+        reference cannot drift apart. Its tolerance limits are measured at loop level &mdash; each
+        is where the fractional spur crosses <span class="num">&minus;60&nbsp;dBc</span> in the
+        event-driven simulator, with the loop's own filtering included &mdash; rather than derived
+        per block in isolation (&sect;7.1).</li>
+
+        <li><b>Silent failure modes in verification apparatus,</b> each found here by accident and
+        each general. They include a circuit that passes every performance measurement while
+        sitting at a bias point that cannot be built, a tolerance sweep that quotes the first
+        failing value as the permitted one (&sect;7.3), and a static timing run that reported
+        setup met while most of the design went unclocked (&sect;7.4).</li>
+
+        <li><b>An open-PDK implementation of the detector.</b> The complete sky130A phase detector
+        is laid out and verified at block and top level, using only open-source tools
+        (&sect;7.4).</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">2</div>
+  <div class="flow">
+    <h2 class="sec">A phase detector that subtracts before it quantises</h2>
+    <p>A fractional-N synthesiser has to remove a known, large, deterministic phase ramp before it
+    can measure the small residual error it actually cares about. Where that subtraction happens
+    decides the architecture. A multi-modulus divider dithered by a MASH modulator subtracts in the
+    <i>time</i> domain and leaves behind quantisation noise the size of one whole output period,
+    shaped upward in frequency. A time-to-digital converter quantises first and subtracts
+    afterwards, so its resolution has to cover the full ramp.</p>
+    <p>The design of [1] subtracts in the voltage domain. A 10-bit segmented current DAC drives a
+    differential capacitor to the voltage that <i>represents</i> the predicted fractional delay; the
+    reference edge then starts a ramp that discharges it at a fixed slew rate, and the divided
+    oscillator edge stops the ramp. Only the residue is digitised, by a 7-bit self-timed SAR. The
+    converter never sees the ramp it removed.</p>
+    <p>The arithmetic is worth stating because it motivates everything downstream. With a
+    <span class="num">1.68&nbsp;GHz</span> detector rate the period is
+    <span class="num">595&nbsp;ps</span>; ten bits of DAC put one LSB at
+    <span class="num">581&nbsp;fs</span>, and a <span class="num">118&nbsp;&micro;V</span> ADC LSB
+    against a <span class="num">0.8&nbsp;mV/ps</span> slew rate resolves
+    <span class="num">147.5&nbsp;fs</span>. Their ratio is a detector with roughly
+    <span class="num">12.0</span> bits of resolution over one detector period, built from two
+    converters that individually have ten and seven.</p>
+
+    <div class="kv">
+      <div><dt>Detector period</dt><dd>595<span>&nbsp;ps</span></dd></div>
+      <div><dt>DAC LSB</dt><dd>581<span>&nbsp;fs</span></dd></div>
+      <div><dt>ADC LSB</dt><dd>147.5<span>&nbsp;fs</span></dd></div>
+      <div><dt>Effective</dt><dd>12.0<span>&nbsp;bit</span></dd></div>
+    </div>
+    <p class="tnote">Derived quantities, checked against the values quoted in [1]. The effective
+    resolution is the detector period divided by the ADC time LSB &mdash; a consequence of
+    sub-ranging, not of either converter alone.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">3</div>
+  <div class="flow">
+    <h2 class="sec">Two models, one parameter set</h2>
+    <p>The reproduction carries two models that overlap only in what they describe.</p>
+
+    <h3 class="sub">3.1 &ensp;The s-domain model</h3>
+    <p>This implements the in-band noise analysis directly: the gated ramp-current term, kT/C
+    sampling noise, comparator noise and quantisation, each referred to output phase, then shaped by
+    the closed-loop transfer functions. Written with the detector's <i>time</i> LSB rather than
+    <code>T_CKV/2**N</code>, the quantisation term stays unambiguous about the feedback
+    divide-by-two:</p>
+    <div class="eq">L<sub>q</sub>(f) = (&pi;&sup2;/3) &middot; f<sub>CKV</sub>&sup2; / f<sub>REF</sub> &middot; t<sub>LSB</sub>&sup2;<span class="tag">eq. 13</span></div>
+    <p>Twelve bits over a <span class="num">595&nbsp;ps</span> detector period and eleven bits over a
+    <span class="num">298&nbsp;ps</span> output period are then the same statement, which is what one
+    would want a bookkeeping convention to guarantee.</p>
+
+    <h3 class="sub">3.2 &ensp;The event-driven simulator</h3>
+    <p>The second model advances real divided-oscillator edges. Each reference cycle it accumulates
+    the ideal phase as an exact integer&ndash;fraction pair, selects the edge the clock gate would
+    pass, pushes the resulting delay through behavioural models of the DAC, ramp and SAR, and feeds
+    the code to a type-II digital loop filter driving the oscillator. Device imperfections live in
+    the blocks: segmented-DAC mismatch and settling, ramp gain error and curvature, SAR capacitor
+    mismatch. Fractional spurs therefore <i>emerge</i> rather than being injected.</p>
+
+    <h3 class="sub">3.3 &ensp;Why this arrangement is useful</h3>
+    <p>Neither model is a reference implementation of the other. One integrates a closed-form
+    spectral density; the other counts edges and quantises voltages. The only object they share is
+    the parameter dataclass. When both land on the same jitter figure, it is difficult to construct
+    a story in which both are wrong in the same direction &mdash; and when they diverge, the
+    divergence localises a defect.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">4</div>
+  <div class="flow">
+    <h2 class="sec">Reproduction</h2>
+    <p>Table 1 gives the outcome. The agreement between the two models is close enough that the
+    remaining gap to measurement is dominated by the measurement itself.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 1</b> &mdash; Reproduction against the published measurements. Jitter is
+        rms, integrated 10&nbsp;kHz&ndash;40&nbsp;MHz.</caption>
+        <thead>
+          <tr><th>Channel</th><th class="n">Simulated</th><th class="n">Analytic</th><th class="n">Measured [1]</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="lead">Integer-N jitter</td><td class="n">81 fs</td><td class="n">84 fs</td><td class="n">82 fs</td></tr>
+          <tr><td class="lead">Integer-N L(110 kHz)</td><td class="n">&minus;116</td><td class="n">&minus;116</td><td class="n">&minus;116 dBc/Hz</td></tr>
+          <tr><td class="lead">Fractional-N jitter</td><td class="n">94 fs</td><td class="n">97 fs</td><td class="n">101 fs</td></tr>
+          <tr><td class="lead">Figure of merit</td><td class="n">&minus;252.3</td><td class="n">&minus;251.9</td><td class="n">&minus;252 dB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Fractional channel is FCW<sub>pd</sub>&nbsp;=&nbsp;20.9688, the near-integer
+    case used in the paper. Figure of merit at the measured 9.2&nbsp;mW.</p>
+
+    <h3 class="sub">4.1 &ensp;One fitted parameter</h3>
+    <p>Implemented from the published equations and published device values alone, the model comes
+    out <span class="num">4</span> to <span class="num">7&nbsp;dB</span> optimistic in band. That is
+    expected: the paper states that its s-domain analysis neglects flicker noise from the ramp
+    generator, and attributes the measured excess between <span class="num">1</span> and
+    <span class="num">100&nbsp;kHz</span> to exactly that. Restoring a single term &mdash; a
+    <span class="num">520&nbsp;kHz</span> flicker corner on the detector's thermal contributions
+    &mdash; reproduces both quoted jitter figures and the quoted in-band density. A least-squares
+    fit was also free to add a white excess-noise term and returned
+    <span class="num">0.0&nbsp;dB</span>, so the published thermal equations need no correction.</p>
+
+    <figure>
+      <div class="plate"><img src="../../results/fig11_phase_noise.png" alt="Two phase-noise plots, integer-N and fractional-N, each showing a simulated trace overlaying an analytic curve from 10 kHz to 40 MHz, with the published measured point marked at 110 kHz."></div>
+      <figcaption><b>Fig. 1</b> &mdash; Output phase noise, integer-N (left) and fractional-N
+      (right). The event-driven trace and the analytic curve are computed independently and are
+      plotted without any fitting between them. The diamond is the density quoted in [1].</figcaption>
+    </figure>
+
+    <h3 class="sub">4.2 &ensp;Where the in-band noise comes from</h3>
+    <p>With the detector budget decomposed, the ramp-current term dominates in a fractional channel
+    because the gating window is open longer on average, and quantisation &mdash; the thing the
+    architecture exists to minimise &mdash; contributes about two per cent.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 2</b> &mdash; In-band detector noise budget, fractional channel
+        (bit&nbsp;5).</caption>
+        <thead><tr><th>Contribution</th><th class="n">Density</th><th class="n">Share</th></tr></thead>
+        <tbody>
+          <tr><td class="lead">Ramp current</td><td class="n">&minus;126.2 dBc/Hz</td><td class="n">51.5 %</td></tr>
+          <tr><td class="lead">kT/C sampling</td><td class="n">&minus;128.8</td><td class="n">27.9 %</td></tr>
+          <tr><td class="lead">Comparator</td><td class="n">&minus;130.6</td><td class="n">18.5 %</td></tr>
+          <tr><td class="lead">Quantisation</td><td class="n">&minus;140.0</td><td class="n">2.1 %</td></tr>
+          <tr><td class="lead">Detector total</td><td class="n">&minus;123.3</td><td class="n">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <div class="plate"><img src="../../results/fig12_noise_breakdown.png" alt="Two stacked-contribution phase-noise plots showing reference, ramp current, kT/C, comparator, quantisation and oscillator terms with the composite total, for integer-N and fractional-N channels."></div>
+      <figcaption><b>Fig. 2</b> &mdash; Each source multiplied by the loop transfer function it
+      actually sees. The dashed trace is the free-running oscillator; the gap between it and the
+      shaped oscillator term is the loop's in-band rejection.</figcaption>
+    </figure>
+
+    <h3 class="sub">4.3 &ensp;An independent check on the operating point</h3>
+    <p>The analysis includes a detector power model in which, at each power budget, the split
+    between ramp current and comparator power is re-optimised with the slew rate held fixed. Run at
+    <span class="num">1&nbsp;mW</span>, the optimiser returns
+    <span class="num">227&nbsp;&micro;A</span> of ramp current,
+    <span class="num">567&nbsp;fF</span> of sampling capacitance and a
+    <span class="num">99&nbsp;&micro;V</span> comparator. The prototype uses
+    <span class="num">220&nbsp;&micro;A</span>, <span class="num">550&nbsp;fF</span> and
+    <span class="num">100&nbsp;&micro;V</span>. Nothing in the optimiser was fitted to those
+    numbers, so their coincidence is a check that the reproduced power model and the reproduced
+    noise model are consistent with each other and with the silicon.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">5</div>
+  <div class="flow">
+    <h2 class="sec">Disagreement as a verification signal</h2>
+    <p>The two models were brought into agreement by fixing the implementation, not by tuning it.
+    Building a test suite around the paper &mdash; each derived quantity against the value the text
+    quotes, each equation against its closed form, each block against the imperfection it exists to
+    model, and the simulator against the analytic model &mdash; surfaced eight defects.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 3</b> &mdash; Defects found by cross-validation, and whether an integer-N
+        test could have observed them.</caption>
+        <thead>
+          <tr><th>Component</th><th>Defect</th><th>Integer-N</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="lead">Spur measurement</td><td>Every spur reported 3.01&nbsp;dB low &mdash; a spurious factor applied to an rFFT bin already equal to A/2.</td><td><span class="chip seen">Visible</span></td></tr>
+          <tr><td class="lead">MASH modulator</td><td>Crashed for orders 1 and 2: the error-feedback delay line was sized <code>order+1</code> but indexed at 3.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Oscillator banks</td><td>The coarse tuning bank's contribution was subtracted only on the cycle that moved it, and never released.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Oscillator periods</td><td>The period generator silently returned fewer samples than requested, corrupting edge times.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Frequency-lock path</td><td>An integer edge count compared against a fractional frequency word, so the error never reached zero.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Frequency-lock path</td><td>No measurement window: the counter's 160&nbsp;MHz quantisation exceeded the detector's capture range.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Phase accounting</td><td>The integer phase term double-counted a cycle whenever the ramp window swept through zero.</td><td><span class="chip blind">Blind</span></td></tr>
+          <tr><td class="lead">Oscillator gain cal.</td><td>Treated the counter difference as a frequency <i>change</i> when it is the absolute frequency; diverged 12&nbsp;kHz&nbsp;&rarr;&nbsp;131&nbsp;kHz.</td><td><span class="chip seen">Visible</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">5.1 &ensp;The integer-N blind spot</h3>
+    <p>Six of the eight defects produce no observable error in an integer-N channel. This is not
+    coincidence, and the mechanisms are worth naming individually, because each is a case where an
+    integer channel holds a quantity at a value that happens to be the defect's fixed point.</p>
+    <ul class="plain">
+      <li><b>The ramp window never approaches zero.</b> In an integer channel the predicted
+      fractional delay is a constant offset, so the window sits at a fixed
+      <span class="num">100&nbsp;ps</span>. The phase-accounting defect fires only when that window
+      sweeps through zero, which happens once per sawtooth period in a fractional channel and never
+      in an integer one.</li>
+      <li><b>The frequency error sits exactly at zero.</b> With an integer frequency word, the
+      expected edge count per reference period is a whole number, so comparing it against an
+      integer counter yields exactly zero and the arithmetic defect is invisible. With a fractional
+      word the same expression can never reach zero.</li>
+      <li><b>Whole code paths are unexercised.</b> The first-order MASH modulator is used only to
+      dither the oscillator's tracking bank; the coarse bank moves only when the tracking bank
+      overflows. An integer channel at the nominal frequency reaches neither.</li>
+    </ul>
+    <p>The generalisation is that the simplest operating mode of a mixed-signal loop tends to be the
+    one in which the largest number of internal quantities are constant &mdash; and a constant is
+    exactly what a defect needs in order to hide.</p>
+
+    <div class="callout">
+      <h4>Magnitude of the effect</h4>
+      <p>Before repair, the model reproduced the paper's integer-N measurements to within three per
+      cent while producing <span class="num">51.6&nbsp;ns</span> of jitter and a
+      <span class="num">&minus;16&nbsp;dBc</span> spur in the fractional channel it was supposed to
+      reproduce at <span class="num">101&nbsp;fs</span> &mdash; an error of nearly three orders of
+      magnitude, sitting behind a headline result that looked correct.</p>
+    </div>
+
+    <p>After repair, fractional channels from bit&nbsp;2 to bit&nbsp;11 agree with the analytic
+    model to within three per cent, with spurs between
+    <span class="num">&minus;75</span> and <span class="num">&minus;120&nbsp;dBc</span>.</p>
+
+    <figure>
+      <div class="plate"><img src="../../results/fig15_spur_vs_fraction.png" alt="Two panels: fractional spur in dBc versus asserted fractional bit for an ideal DAC, a 0.3 percent gain mismatch, and the mismatch with background calibration; alongside integrated jitter on a log scale for the same three cases."></div>
+      <figcaption><b>Fig. 3</b> &mdash; Fractional spur and integrated jitter against the asserted
+      fractional bit, after repair. With an ideal DAC every channel locks at 94&ndash;98&nbsp;fs.
+      Against a 0.3&nbsp;% DAC gain mismatch, background calibration recovers 11&ndash;20&nbsp;dB of
+      spur from bit 2 to bit 8 and holds the jitter near 100&nbsp;fs up to bit 7. From bit 9 on it
+      stops helping, because the fractional sawtooth falls inside the loop bandwidth and the
+      calibration's gradient loses its sign (&sect;8).</figcaption>
+    </figure>
+
+    <h3 class="sub">5.2 &ensp;Three more, in acquisition</h3>
+    <p>The eight defects above were found by comparing the two models in lock. Three more were
+    found later, and they were found because the silicon work (&sect;7) kept producing symptoms that
+    looked like a design with a thin acquisition margin. Some tolerance sweep points failed to lock
+    while their neighbours were clean, and a faster loop gear locked with ideal devices but not with
+    any perturbation. The margin was not thin. All three defects were in how the simulator forms the
+    phase error while the detector is railed:</p>
+    <ul class="plain">
+      <li><b>A fast oscillator was invisible to the counter.</b> Edges were generated only up to the
+      one the reference accumulator predicts, so when the oscillator ran ahead the extra edges never
+      existed and the frequency-lock path read zero error. A +30&nbsp;MHz start took 12&times;
+      longer than &minus;30&nbsp;MHz. Every system-level acquisition test had used a negative
+      offset.</li>
+      <li><b>The integer phase term was double counted at the far end of the window.</b> An in-range
+      residue already holds the whole phase error, and the counter's integer was added on top. The
+      result was a two-cycle kick once per sawtooth period, and fractional channels could sit
+      frequency-locked but railed about 75&nbsp;% of the time.</li>
+      <li><b>The frequency-lock path ignored the detector's offset margin.</b> In a fractional
+      channel the counter and the ideal phase wrap on different cycles. When the sawtooth period is
+      a small multiple of the 64-cycle counting window, the loop sees a &plusmn;390&nbsp;kHz square
+      wave of false corrections.</li>
+    </ul>
+    <p>Two of the three exist only in fractional channels, and the third only when the oscillator
+    starts fast, a case no test exercised. Acquisition over fractional bits 0 and 2&ndash;14, at
+    &minus;30, 0 and +30&nbsp;MHz and two seeds each, went from 16 of 42 cells not fully locked to
+    0 of 42 at the sky130 operating point. At the paper's operating point it went from 7 of 42 to 0.
+    None of the reproduction numbers in Table&nbsp;1 moved, because in steady lock none of the three
+    code paths acts. That is the blind spot again: the headline result was insensitive to exactly the
+    defects that mattered elsewhere.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">6</div>
+  <div class="flow">
+    <h2 class="sec">A design-space dataset, and what it cannot tell you</h2>
+    <p>With both models trusted, the analytic path is cheap enough &mdash; milliseconds per point
+    against seconds for an event-driven run &mdash; to survey the design space. We Sobol-sample 18
+    parameters spanning the detector devices, the oscillator, the reference and the loop, and
+    evaluate each point into 53 columns: the parameters and derived quantities as features; the
+    four in-band noise terms, the output density at four probe offsets, jitter, power and figure of
+    merit as targets.</p>
+
+    <div class="kv">
+      <div><dt>Design points</dt><dd>16 384</dd></div>
+      <div><dt>Feasible</dt><dd>43<span>&nbsp;%</span></dd></div>
+      <div><dt>Median jitter</dt><dd>128<span>&nbsp;fs</span></dd></div>
+      <div><dt>Best FoM</dt><dd>&minus;265<span>&nbsp;dB</span></dd></div>
+    </div>
+    <p class="tnote">Infeasible points are retained with the constraint they violated rather than
+    dropped &mdash; where sub-ranging stops working is part of the physics worth recording. The
+    dominant in-band term is the ramp current in 46&nbsp;% of feasible designs, the comparator in
+    32&nbsp;%, kT/C in 20&nbsp;% and quantisation in 2&nbsp;%.</p>
+
+    <h3 class="sub">6.1 &ensp;The model has no representation of lock</h3>
+    <p>The s-domain analysis will return a perfectly well-formed jitter figure for a design whose
+    phase detector would be railed from the first cycle, because nothing in a spectral density
+    knows that the converter has ends. This is not a defect in the analysis &mdash; it is outside
+    its remit &mdash; but it is fatal to the naive use of such a model as a label generator.</p>
+    <p>We therefore add a derived quantity: the detector's capture window,
+    <code>adc_full_scale / SR</code>, divided by six times the rms residual the loop does
+    <i>not</i> correct, which is the oscillator and reference noise high-pass filtered by the loop
+    transfer function. Below a margin of roughly five, the simulator stops locking.</p>
+    <p>Applying that constraint together with a bandwidth ceiling, we cross-checked 48 feasible
+    points with the full simulator, and all 48 locked. Both thresholds were first measured with a
+    simulator that still had the three acquisition defects of &sect;5.2, so they are now
+    conservative. Of 48 rows that only these constraints reject, 20 of the 23 rejected for
+    bandwidth above 1&nbsp;MHz now lock (4 before), and 13 of the 25 rejected for a capture margin
+    below six do (0 before). The margin constraint is still partly real, since 5 of the 15 rows
+    below a margin of three lock, but both thresholds need re-deriving before they are trusted to
+    shape a dataset.</p>
+
+    <h3 class="sub">6.2 &ensp;Where the loop locks, the labels are accurate: a retracted result</h3>
+    <p>An earlier version of this study reported the opposite. Only 38 of the 48 cross-checked
+    points locked, and on those the simulated jitter exceeded the analytic estimate by a factor that
+    grew with loop bandwidth, reaching 4.65&times;. We attributed this to the closed-loop transfer
+    function being a continuous-time approximation of a loop sampled at the reference rate.</p>
+    <p>That explanation was wrong. The gap was the three simulator defects of &sect;5.2, which left
+    loops railed or limit-cycling while still reporting a jitter figure. With them repaired, the same
+    48 points all lock, all 48 fall within 1.5&times;, and the median ratio in every bandwidth bin is
+    within three per cent of unity. Individual points range from 0.84 to 1.24, and 43 of the 48
+    are within ten per cent. The analytic model was right all along. We keep the retraction
+    in the report because it is a clean instance of the thesis of &sect;5: two independent models
+    disagreed, and the disagreement localised a defect. It just took a second look to find that the
+    defect was in the reference model, not in the surrogate.</p>
+
+    <figure>
+      <div class="chartbox">
+        <svg viewBox="0 0 580 232" role="img" aria-label="Median ratio of simulated to analytic jitter by loop bandwidth. Before the acquisition fixes: 1.50 below 200 kHz, 4.65 between 200 and 500 kHz, 4.54 at or above 500 kHz. After: 0.97, 0.98 and 1.01. Perfect agreement is 1.0.">
+          <g class="c-grid">
+            <line x1="152" y1="18" x2="152" y2="186"></line>
+            <line x1="304" y1="18" x2="304" y2="186"></line>
+            <line x1="380" y1="18" x2="380" y2="186"></line>
+            <line x1="456" y1="18" x2="456" y2="186"></line>
+            <line x1="532" y1="18" x2="532" y2="186"></line>
+          </g>
+          <line class="c-ref" x1="228" y1="14" x2="228" y2="190"></line>
+          <text class="c-note" x="233" y="12">no bias (1.0&times;)</text>
+
+          <!-- legend -->
+          <rect class="c-bar-old" x="392" y="3" width="11" height="11"></rect>
+          <text class="c-note" x="408" y="12">before fixes (38 locked)</text>
+          <rect class="c-bar" x="392" y="19" width="11" height="11"></rect>
+          <text class="c-note" x="408" y="28">after (48 locked)</text>
+
+          <!-- < 200 kHz -->
+          <rect class="c-bar-old" x="152" y="40" width="114" height="18"></rect>
+          <rect class="c-bar" x="152" y="60" width="74" height="18"></rect>
+          <text class="c-val" x="274" y="54">1.50&times;</text>
+          <text class="c-val" x="240" y="74">0.97&times;</text>
+          <text class="c-cat" x="142" y="63" text-anchor="end">&lt; 200 kHz</text>
+
+          <!-- 200-500 kHz -->
+          <rect class="c-bar-old" x="152" y="92" width="353" height="18"></rect>
+          <rect class="c-bar" x="152" y="112" width="75" height="18"></rect>
+          <text class="c-val" x="513" y="106">4.65&times;</text>
+          <text class="c-val" x="240" y="126">0.98&times;</text>
+          <text class="c-cat" x="142" y="115" text-anchor="end">200&ndash;500 kHz</text>
+
+          <!-- >= 500 kHz -->
+          <rect class="c-bar-old" x="152" y="144" width="345" height="18"></rect>
+          <rect class="c-bar" x="152" y="164" width="77" height="18"></rect>
+          <text class="c-val" x="505" y="158">4.54&times;</text>
+          <text class="c-val" x="240" y="178">1.01&times;</text>
+          <text class="c-cat" x="142" y="167" text-anchor="end">&ge; 500 kHz</text>
+
+          <line class="c-axis" x1="152" y1="186" x2="532" y2="186"></line>
+          <g class="c-tick" text-anchor="middle">
+            <text x="152" y="202">0</text>
+            <text x="228" y="202">1</text>
+            <text x="304" y="202">2</text>
+            <text x="380" y="202">3</text>
+            <text x="456" y="202">4</text>
+            <text x="532" y="202">5</text>
+          </g>
+          <text class="c-axlab" x="342" y="224" text-anchor="middle">median simulated jitter / analytic jitter</text>
+        </svg>
+      </div>
+      <figcaption><b>Fig. 4</b> &mdash; The same 48 cross-checked design points (seed 0), before and
+      after the acquisition fixes of &sect;5.2. Before, 38 locked and 12 of those fell within
+      1.5&times;. After, all 48 lock and all 48 fall within 1.5&times;. Forty-eight points is still
+      a small sample.</figcaption>
+    </figure>
+
+    <h3 class="sub">6.3 &ensp;The architectural comparison, quantified</h3>
+    <p>The same machinery makes the paper's opening argument numerical. Comparing the residual
+    quantisation of this detector against a MASH-dithered multi-modulus divider, after identical
+    loop filtering, the divider costs between <span class="num">50</span> and
+    <span class="num">107&nbsp;fs</span> of jitter against
+    <span class="num">6.6&nbsp;fs</span> &mdash; on its own comparable to the entire measured budget
+    of the design it would replace.</p>
+    <p>A second-order effect falls out of the same calculation: a <i>higher</i> MASH order is worse,
+    not better, behind a bare type-II loop. The loop rolls off at 20&nbsp;dB/decade while the
+    shaping rises at 40 or 60, so the steeper modulator wins in band and loses everywhere else.
+    That is the extra filtering an MMDIV-based synthesiser needs and this architecture does not.</p>
+
+    <figure>
+      <div class="plate"><img src="../../results/compare_architectures.png" alt="Left: phase-noise densities of MASH-1, MASH-2 and MASH-3 divider quantisation rising with offset frequency, against the flat FDVPD quantisation floor. Right: horizontal bars of jitter contribution, FDVPD 7 fs against MASH dividers at 50, 64 and 107 fs."></div>
+      <figcaption><b>Fig. 5</b> &mdash; Quantisation noise of the two architectures after the same
+      loop filter, and the jitter each contributes. Densities alone understate the problem, because
+      deep in band the shaped noise is negligible; the integral is the fair comparison.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">7</div>
+  <div class="flow">
+    <h2 class="sec">From verified model to silicon</h2>
+    <p>A model that reproduces a measurement is in a position to do something a document cannot: be
+    the design entry for the next implementation. We retarget the detector to sky130A, with the
+    specification <i>generated</i> by the same code that reproduces [1] rather than transcribed from
+    it, so the spec and its golden reference cannot drift apart.</p>
+
+    <h3 class="sub">7.1 &ensp;What transfers, and what does not</h3>
+    <p>The paper's operating point does not survive the move. It wants a
+    <span class="num">3.36&nbsp;GHz</span> oscillator, a <span class="num">0.8&nbsp;mV/ps</span>
+    ramp and a <span class="num">118&nbsp;&micro;V</span> comparator. Retargeting to a
+    <span class="num">1&nbsp;GHz</span> output and a <span class="num">500&nbsp;MHz</span> detector
+    rate leaves a <span class="num">2&nbsp;ns</span> period, which makes every timing target
+    <span class="num">3.4&times;</span> easier and relaxes the voltage targets with it. The model
+    says the detector still reaches <span class="num">12.0</span> effective bits, with an in-band
+    floor within about a decibel of the original (&minus;122.3 against &minus;123.3&nbsp;dBc/Hz).
+    The ramp is single-ended: one 200&nbsp;&micro;A sink discharges vn into 0.5&nbsp;pF and vp is
+    left alone. The DAC's outputs sit between 1.4 and 1.8&nbsp;V, so a PMOS source ramping vp
+    upward would have to pass the supply. One sink of SR&nbsp;&middot;&nbsp;C<sub>SAR</sub> gives
+    the same differential slope, and in the model's terms its current noise and kT/C come out
+    identical, so the noise equations need no change.</p>
+    <p>The oscillator does not scale the same way, and the model says so quantitatively: at this
+    operating point it attributes <span class="num">88.7&nbsp;%</span> of the output jitter variance
+    to the DCO. A low-noise 1&nbsp;GHz LC oscillator in sky130's metal stack is a project in its own
+    right, so the detector is specified, built and verified standalone and the oscillator is
+    explicitly out of scope. That decision is made by a number rather than by taste, which is the
+    point of having the model.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 4</b> &mdash; Retargeted detector, generated by
+        <code>silicon/spec/make_spec.py</code>. The original column is the prototype of [1].</caption>
+        <thead><tr><th>Quantity</th><th class="n">sky130A</th><th class="n">Original [1]</th></tr></thead>
+        <tbody>
+          <tr><td class="lead">Output / reference</td><td class="n">1.00 GHz / 50 MHz</td><td class="n">3.36 GHz / 40 MHz</td></tr>
+          <tr><td class="lead">Detector period</td><td class="n">2000 ps</td><td class="n">595 ps</td></tr>
+          <tr><td class="lead">Slew rate (diff.)</td><td class="n">0.40 mV/ps</td><td class="n">0.80 mV/ps</td></tr>
+          <tr><td class="lead">Ramp current, C_SAR</td><td class="n">200 &micro;A single-ended, 0.5 pF</td><td class="n">220 &micro;A, 550 fF</td></tr>
+          <tr><td class="lead">DAC LSB</td><td class="n">1.95 ps</td><td class="n">581 fs</td></tr>
+          <tr><td class="lead">ADC LSB</td><td class="n">195 &micro;V = 488 fs</td><td class="n">118 &micro;V = 147.5 fs</td></tr>
+          <tr><td class="lead">Effective resolution</td><td class="n">12.00 bit</td><td class="n">12.0 bit</td></tr>
+          <tr><td class="lead">In-band floor</td><td class="n">&minus;122.3 dBc/Hz</td><td class="n">&minus;123.3 dBc/Hz</td></tr>
+          <tr><td class="lead">Detector power (model)</td><td class="n">0.62 mW</td><td class="n">1.0 mW</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">7.2 &ensp;A tolerance budget measured at loop level</h3>
+    <p>Device areas are set by how much imperfection the <i>loop</i> tolerates, not by how much the
+    block tolerates in isolation, because the loop filters some of it away. Each entry below is
+    therefore produced by sweeping one imperfection in the event-driven simulator until the
+    fractional spur crosses <span class="num">&minus;60&nbsp;dBc</span> or the loop stops locking,
+    at fractional bit 5.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 5</b> &mdash; Tolerance budget, generated. Each limit is the largest
+        swept value at which the loop still locks and the fractional spur stays at or below
+        &minus;60&nbsp;dBc. The &ldquo;as first reported&rdquo; column is what the same generator
+        produced before the defects of &sect;7.3 were repaired.</caption>
+        <thead>
+          <tr><th>Imperfection</th><th class="n">Limit</th><th class="n">As first reported</th><th>Sets</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="lead">dac_sigma_lsb</td><td class="n">0.025 LSB rms</td><td class="n">0.05</td><td>Unit current-source area</td></tr>
+          <tr><td class="lead">dac_gain_err</td><td class="n">0.20 %</td><td class="n">0.40 %</td><td>Ramp/DAC reference tracking</td></tr>
+          <tr><td class="lead">dac_settle_tau</td><td class="n">4000 ps</td><td class="n">6000 ps</td><td>Switch R<sub>on</sub> &times; C_SAR</td></tr>
+          <tr><td class="lead">ramp_nl2</td><td class="n">0.0025 /V</td><td class="n">0.005</td><td>Ramp sink output impedance</td></tr>
+          <tr><td class="lead">adc_sigma_cap</td><td class="n">8.00 %</td><td class="n">1.00 %</td><td>SAR unit capacitor area</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Four limits tightened and one loosened by a factor of eight. The
+    <code>adc_sigma_cap</code> entry is the consequential one: at 1&nbsp;% it demanded roughly
+    64&times; the capacitor area actually needed, in the one block this architecture is specifically
+    supposed to let you make small, because the SAR only ever sees the residue.</p>
+
+    <p>Two entries deserve reading rather than just using. <code>dac_sigma_lsb</code> at
+    <span class="num">0.025&nbsp;LSB</span> rms is <span class="num">0.0024&nbsp;%</span> of full
+    scale on a 10-bit converter, and will dominate the unit-element area &mdash; it is the binding
+    constraint of the five. <code>adc_sigma_cap</code> at <span class="num">8&nbsp;%</span> is not a
+    constraint at all, which is the sub-ranging architecture paying off in the place it was
+    supposed to.</p>
+    <p>One caveat carried with the table: each point runs on three seeds, and for the mismatch
+    sweeps the seed <i>is</i> the device draw, so the reported spur is the worst of the three. That
+    is a crude upper quartile, not a yield figure. A budget that will actually be built from wants
+    Monte-Carlo at a stated confidence, and these numbers are the starting point for that rather
+    than a substitute.</p>
+
+    <h3 class="sub">7.3 &ensp;Two ways the verification itself was wrong</h3>
+    <p>Both were found while producing the numbers above, and both have the same shape: a check that
+    reports success because it is not measuring the thing that can fail.</p>
+
+    <p><b>A circuit that passes every performance target and cannot be built.</b> The first-cut ramp
+    generator &mdash; a plain NMOS mirror &mdash; hit its slew rate but missed the curvature budget,
+    which is what a cascode is for. The cascoded version measured
+    <span class="num">0.0015&nbsp;/V</span> against what was then believed to be a
+    <span class="num">0.005&nbsp;/V</span> budget: a clean pass on every measurement in the
+    testbench. It was also unbuildable. Its cascode gate
+    needs <span class="num">2&middot;V<sub>GS</sub></span>, which at this bias is
+    <span class="num">1.84&nbsp;V</span> on a <span class="num">1.8&nbsp;V</span> supply; the ideal
+    current source in the testbench drove the node there without complaint, because an ideal current
+    source has infinite compliance. Nothing in a performance measurement detects an unrealisable
+    bias point.</p>
+    <p>The fix is not a better cascode but a better testbench: it now measures
+    <code>bias_headroom</code> explicitly, and the number goes negative on any arrangement that
+    cheats. The general form of the lesson is that a testbench should assert the conditions its own
+    idealisations depend on &mdash; every ideal source is a promise that the real one will have the
+    compliance, and the promise is worth checking.</p>
+    <p>The circuit that replaced it is a wide-swing cascode, chosen for the supply-headroom reason
+    rather than the swing reason it is usually chosen for. One <span class="num">W/4</span> device
+    sets the gate at <span class="num">1.18&nbsp;V</span> with
+    <span class="num">0.62&nbsp;V</span> of compliance left, and cascoding the reference branch from
+    the same node puts both mirror drains within <span class="num">3.7&nbsp;mV</span> of each other
+    &mdash; which also recovers a <span class="num">3&nbsp;%</span> slew-rate error that the
+    intermediate, supply-violating version had.</p>
+
+    <figure>
+      <div class="chartbox">
+        <svg viewBox="0 0 580 180" role="img" aria-label="Second-order ramp non-linearity on a logarithmic axis: simple mirror 0.0085 per volt, 3.4 times above the 0.0025 per volt budget; wide-swing cascode 0.00034 per volt, with a corner range extending to 0.00044, well below budget.">
+          <g class="c-grid">
+            <line x1="150" y1="16" x2="150" y2="134"></line>
+            <line x1="340" y1="16" x2="340" y2="134"></line>
+            <line x1="530" y1="16" x2="530" y2="134"></line>
+          </g>
+          <!-- budget reference at the corrected 0.0025 /V -->
+          <line class="c-ref" x1="416" y1="12" x2="416" y2="138"></line>
+          <text class="c-note" x="411" y="10" text-anchor="end">budget 0.0025 /V</text>
+
+          <!-- bars -->
+          <rect class="c-bar" x="150" y="28" width="366" height="28"></rect>
+          <rect class="c-bar" x="150" y="80" width="100" height="28"></rect>
+          <!-- corner spread on the cascode bar -->
+          <line class="c-rng" x1="250" y1="94" x2="272" y2="94"></line>
+          <line class="c-rng" x1="272" y1="88" x2="272" y2="100"></line>
+
+          <text class="c-val" x="522" y="47">0.0085</text>
+          <text class="c-val" x="282" y="99">0.00034</text>
+
+          <text class="c-cat" x="140" y="41" text-anchor="end">simple mirror</text>
+          <text class="c-cat" x="140" y="93" text-anchor="end">wide-swing cascode</text>
+          <text class="c-n" x="140" y="54" text-anchor="end">tt 27 C</text>
+          <text class="c-n" x="140" y="106" text-anchor="end">tt 27 C, 9 corners</text>
+
+          <line class="c-axis" x1="150" y1="134" x2="530" y2="134"></line>
+          <g class="c-tick" text-anchor="middle">
+            <text x="150" y="150">0.0001</text>
+            <text x="340" y="150">0.001</text>
+            <text x="530" y="150">0.01</text>
+          </g>
+          <text class="c-axlab" x="340" y="170" text-anchor="middle">implied ramp_nl2, /V (log scale)</text>
+        </svg>
+      </div>
+      <figcaption><b>Fig. 6</b> &mdash; Ramp curvature before and after cascoding, ngspice on
+      sky130A. The whisker on the lower bar is the spread across nine corners
+      (ss/tt/ff &times; &minus;40/27/85&nbsp;&deg;C), which reaches
+      <span class="num">0.00044&nbsp;/V</span> at worst &mdash; still
+      <span class="num">5.7&times;</span> inside budget. Both circuits are driven from the same
+      precharge pulse into the same 1&nbsp;pF load in one testbench, so the difference is the
+      cascode and nothing else. The budget shown is the corrected
+      <span class="num">0.0025&nbsp;/V</span>; against the
+      <span class="num">0.005</span> that this work used until the sweep was repaired, the simple
+      mirror would have looked less than a factor of two off.</figcaption>
+    </figure>
+
+    <p><b>A limit-finder that quoted the first failing value as the permitted one.</b> The sweep in
+    &sect;7.2 originally recorded the first value at which the design failed and reported it as the
+    tolerance limit. That is off by one step in the direction that matters: it hands the designer
+    the exact geometry that has just been demonstrated not to work. For
+    <code>dac_gain_err</code> it reported <span class="num">0.40&nbsp;%</span> when
+    <span class="num">0.2&nbsp;%</span> was the largest value that actually passed &mdash; a
+    two-to-one under-design.</p>
+    <p>Compounding it, the search latched onto the <i>first</i> failure and never reconsidered. The
+    sweeps contain occasional acquisition races where one random draw fails to lock while its
+    neighbours are fine, and one such race at the smallest swept value of
+    <code>adc_sigma_cap</code> set that limit to <span class="num">1&nbsp;%</span> when the design
+    in fact tolerates <span class="num">8&nbsp;%</span> &mdash; an over-design of roughly
+    <span class="num">64&times;</span> in capacitor area, in the block the architecture is
+    specifically supposed to let you make small.</p>
+    <p>A third error was in the sweep ranges rather than the search. <code>ramp_nl2</code> was
+    quoted at <span class="num">0.005&nbsp;/V</span>, which was simply the bottom of its range; that
+    value does not meet the spur target, so the real limit had never been inside the sweep at all.
+    It is <span class="num">0.0025&nbsp;/V</span>. A limit that coincides with the end of the range
+    is not a measurement, and is worth treating as a prompt to extend the range.</p>
+
+    <div class="callout">
+      <h4>The first repair was also wrong</h4>
+      <p>Re-running failures on extra seeds and accepting the point if <i>any</i> seed passed
+      removes the acquisition races, and is backwards for mismatch. In those sweeps the seed
+      <i>is</i> the device draw, so best-of-three means sizing from the luckiest die &mdash; it
+      reported <code>dac_sigma_lsb</code> at <span class="num">0.1&nbsp;LSB</span> against the
+      <span class="num">0.025</span> the pessimistic draw supports.</p>
+      <p>The reduction has to be asymmetric, because the seed means two different things at once:
+      the spur is taken as the <b>worst</b> of the seeds that locked, while lock requires only a
+      <b>majority</b>. A genuine tolerance limit fails on every seed; a race does not.</p>
+    </div>
+
+    <p>So the repair is: report the largest value that passes, end the sweep at the first confirmed
+    failure, reduce across seeds in the direction appropriate to what the seed represents, and
+    print enough significant figures that the rounding does not reintroduce the original error
+    &mdash; <span class="num">0.025</span> displayed to two decimal places is
+    <span class="num">0.03</span>, which is again a limit quoted looser than the one measured.</p>
+
+    <h3 class="sub">7.4 &ensp;The detector, built</h3>
+    <p>With the specification settled, the whole detector is implemented in sky130A with open-source
+    tools only: ngspice, magic, netgen, KLayout, Icarus Verilog and LibreLane, run in the
+    IIC-OSIC-TOOLS container. Every analog cell is generated by a Python script, so geometry and
+    netlist are reproducible from source. Each block is verified on its own (DRC, extraction, LVS
+    against a reference netlist) before the top level is assembled.</p>
+
+    <div class="tbl">
+      <table>
+        <caption><b>Table 6</b> &mdash; Implementation status. &ldquo;Clean&rdquo; means magic's full
+        sky130A DRC deck reports no errors and netgen matches the extracted layout to the reference
+        uniquely.</caption>
+        <thead><tr><th>Block</th><th>Verified in simulation</th><th>Layout</th></tr></thead>
+        <tbody>
+          <tr><td class="lead">Ramp sink</td><td>Wide-swing cascode; 9 corners, post-layout</td><td>34.0 &times; 21.2 &micro;m, clean</td></tr>
+          <tr><td class="lead">Current DAC, 10 b</td><td>13 corners; 200-draw Monte-Carlo through the loop; post-layout at tt</td><td>264 &times; 317 &micro;m, clean</td></tr>
+          <tr><td class="lead">Bias</td><td>13 corners; start-up from a slow supply ramp at every corner</td><td>Clean</td></tr>
+          <tr><td class="lead">SAR front end</td><td>Full-range front end; mixed-signal co-simulation</td><td>87.5 &times; 174.7 &micro;m, clean</td></tr>
+          <tr><td class="lead">Timing and control</td><td>RTL testbench, 38 cycles against the model's arithmetic; co-simulation</td><td>LibreLane, 205 &times; 110 &micro;m; DRC, LVS, antenna clean</td></tr>
+          <tr><td class="lead">Top level</td><td>Not yet simulated as extracted</td><td>510 &times; 495 &micro;m; DRC 0 errors; LVS unique over 5 blocks, 143 nets</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure>
+      <div class="plate"><img src="../../silicon/layout/fdvpd.png" alt="Top-level layout of the detector: the current DAC's three array columns across the top left, the synthesised control macro beneath it, and the SAR front end, ramp sink and bias block stacked to the right, joined by a routing channel and power trunks."></div>
+      <figcaption><b>Fig. 7</b> &mdash; The detector in sky130A, 510&nbsp;&times;&nbsp;495&nbsp;&micro;m.
+      Top left: the current DAC's common-centroid unit array and its switch row. Below it: the
+      LibreLane control macro, its pins aligned to the DAC's switch inputs. Right: the SAR front
+      end, ramp sink and bias block, reached through a channel in which each net owns one m2 column.
+      </figcaption>
+    </figure>
+
+    <p><b>The current DAC meets the loop-level budget with measured mismatch.</b> The three-seed
+    <code>dac_sigma_lsb</code> limit of Table&nbsp;5 is a proxy for a yield figure, so the proxy was
+    replaced by the real thing. We took 200 sky130 Monte-Carlo draws of the 21 segment currents,
+    rebuilt the behavioural DAC from each draw and ran the fractional channel. All 200 lock, and the
+    worst spur is &minus;61.5&nbsp;dBc against the &minus;60&nbsp;dBc target (median
+    &minus;65.4). The margin is real but thin. The unit source, 0.84&nbsp;&times;&nbsp;24&nbsp;&micro;m,
+    was chosen for low g<sub>m</sub>/I<sub>D</sub> rather than area: at fixed current, mismatch
+    tracks g<sub>m</sub>/I<sub>D</sub>&nbsp;&middot;&nbsp;&sigma;<sub>VT</sub>, so a long narrow
+    device reaches nearly the matching of a 1&nbsp;&times;&nbsp;32&nbsp;&micro;m one at a third of
+    the area. Post-layout INL is 0.085&nbsp;LSB and the settling time constant 1.35&nbsp;ns, against
+    a 4&nbsp;ns limit. The implementation needed one addition the model does not have: a 7-bit trim
+    on the reference diode, because R<sub>D</sub>&middot;C<sub>SAR</sub> spreads from &minus;30 to
+    +35&nbsp;% across the R/C corners and the background calibration absorbs only &plusmn;3&nbsp;%.</p>
+
+    <p><b>The encode switch was the detector's largest error, and the first testbench missed
+    it.</b> Fitting the front end's residue against DAC code and time, the first runs walked codes
+    100&ndash;516 and looked clean. The co-simulation reached codes near 1000 and found a
+    12.9&nbsp;LSB rms residual. vp follows the DAC down to 0.88&nbsp;V, where a PMOS switch with its
+    well at the supply has as much threshold as gate drive. A transmission gate with a low-threshold
+    NMOS on vp, and a PMOS alone on vn (which is only ever precharged to the supply), brought the
+    residual from 3.92&nbsp;mV to 0.23&nbsp;mV rms, about twice the ideal-switch floor.</p>
+
+    <p><b>A third silent failure: the timing run was not timing the design.</b> The first static
+    timing analysis of the control macro reported setup met with +1.4&nbsp;ps. The constraint file
+    declared the detector clock on &ldquo;the driver of net <code>ckvd</code>&rdquo;. After buffer
+    insertion that driver was the port's own buffer, so the clock reached the port and nothing
+    inside it: 129 register pins went untimed. The first honest run failed by 2.0&nbsp;ns at the slow
+    corner. After pipelining the edge counter and the stop compare, and resizing the clock gates,
+    setup is met at every corner except one path at ss&nbsp;/&nbsp;100&nbsp;&deg;C&nbsp;/&nbsp;1.60&nbsp;V.
+    That path is the 1&nbsp;GHz divider's own feedback loop, which misses by 43&nbsp;ps. It is a
+    standard-cell flop toggling at the oscillator frequency, and the fix belongs in the oscillator
+    (a custom TSPC divider stage), which is out of scope here.</p>
+
+    <p><b>Mixed-signal co-simulation.</b> The control RTL runs in Icarus, coupled through ngspice's
+    <code>d_cosim</code> to transistor netlists of the DAC, the ramp sink and the whole front end.
+    The fractional word is chosen so that the DAC code walks its full range and the residue sweeps
+    the SAR's. Every SAR code lands within 0 to +3&nbsp;LSB of an ideal 7-bit quantisation of the
+    residue it saw, and the fitted DAC-to-ramp gain is 1.004. The overall fit residual is not yet at
+    the LSB level (14.1&nbsp;LSB rms). It is dominated by settling memory: the 8&nbsp;ns encode
+    window against a 1.2&ndash;1.4&nbsp;ns time constant leaves about 0.2&nbsp;% of each step behind.
+    Feeding that measured settling back into the model's <code>dac_settle_tau</code> is the open
+    item that closes the loop between silicon and model.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">8</div>
+  <div class="flow">
+    <h2 class="sec">Limitations</h2>
+    <p>Each of these bounds a claim made above.</p>
+    <ul class="plain">
+      <li><b>The current DAC is not dithered.</b> The predicted fractional delay is rounded onto the
+      10-bit grid, so beyond fractional bit 11 the word advances by half an LSB per cycle and the
+      rounding error becomes a slow in-band triangle rather than white noise. The
+      <span class="num">581&nbsp;fs</span> DAC LSB therefore sets a floor on fractional phase
+      accuracy in the deepest channels that hardware would answer with dither.</li>
+      <li><b>Gain calibration is only conditionally sound.</b> It correlates the measured error
+      against the fractional sawtooth; once that sawtooth falls inside the loop bandwidth, what
+      reaches the detector is a phase-rotated version, and past ninety degrees the gradient inverts.
+      A clamp set to what the detector can physically absorb, and a leak that keeps running while
+      the converter is railed, prevent this from costing lock &mdash; but in the deepest channels
+      the loop is inert rather than converging.</li>
+      <li><b>A positive DAC gain error costs lock outright</b> in some deep fractional channels from
+      a few tenths of a per cent upward: the DAC asks for more than one detector period at the top
+      of the sawtooth, so that part of the range is unreachable and the converter rails once per
+      period. Which channels break is deterministic across seeds but not monotonic in the fractional
+      bit.</li>
+      <li><b>Oscillator power is not modelled.</b> In the dataset the oscillator's phase noise
+      varies freely but costs nothing, so the reported figure of merit is a detector figure of merit
+      rather than a whole-synthesiser one.</li>
+      <li><b>The sky130A detector is verified in simulation and layout, not in silicon.</b> Nothing
+      has been fabricated or measured. The extracted top level has not been simulated as a whole; the
+      co-simulation uses schematic netlists. There is no metal fill, no density check and no pad
+      ring. There are no schematic-capture drawings: the design lives in generated netlists, and LVS
+      runs against those.</li>
+      <li><b>The detector is not a synthesiser.</b> The oscillator is out of scope (&sect;7.1), and
+      the control macro's 1&nbsp;GHz divider misses timing by 43&nbsp;ps at the slow corner, which a
+      custom divider in the oscillator would have to fix.</li>
+      <li><b>Open items between silicon and model.</b> The encode-settling memory measured in
+      co-simulation has not been fed back into <code>dac_settle_tau</code>. The DAC trim is passed
+      through from a pin, and nothing yet moves it when temperature pushes the calibration toward its
+      clamp. The detector's gain follows the absolute bias current (165&ndash;271&nbsp;&micro;A over
+      corners), and the SAR's range in time follows an untrimmed R&middot;C product (&plusmn;20&nbsp;%
+      over the R corners). Neither has been checked against the loop's gain calibration.</li>
+      <li><b>The detector flicker corner in the sky130A spec is an estimate.</b> It is carried over
+      as a plausible 130 nm-class figure rather than extracted from a noise simulation of the
+      circuit that was actually built, and it feeds straight into the quoted in-band floor.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">9</div>
+  <div class="flow">
+    <h2 class="sec">Conclusion</h2>
+    <p>Reproducing a mixed-signal paper in two independent models costs roughly twice as much as
+    reproducing it once, and returns something a single model cannot: a continuously available
+    consistency check that does not depend on the measurements being reproduced. In this case it
+    converted a result that matched the paper's headline numbers &mdash; and was wrong by three
+    orders of magnitude in the operating mode the paper is actually about &mdash; into one that
+    agrees with both the measurements and itself.</p>
+    <p>The broader observation is about where to point verification effort. The defects clustered
+    almost entirely in the fractional-N path, not because that code was written less carefully, but
+    because integer-N operation holds so many internal quantities constant that it cannot exercise
+    them. A test suite that reproduces a paper's headline measurement is measuring the mode in which
+    the design is easiest to get right.</p>
+    <p>For the dataset, the practical conclusion is narrower. An analytic PLL model is a fast,
+    smooth and, where the loop locks, accurate surrogate, but it does not know whether the loop
+    locks. That has to be carried alongside the labels, not discovered downstream. This study first
+    got the accuracy half wrong, and the error was in the simulator used to check the surrogate,
+    which is a reason to keep the two models checking each other rather than to crown either one.</p>
+    <p>And the same lesson recurs one level down, in the circuit work. A cascode that met every
+    performance target while biased above its own supply, a tolerance sweep that reported the first
+    failing value as the permitted one, and a timing run that reported setup met on a design it was
+    not clocking, are all instances of a check succeeding because it was not measuring what could
+    fail. The cross-validation in &sect;5 works for the same reason
+    these failed: it compares two things that would have to be wrong together, and that is a harder
+    condition to satisfy by accident than any single measurement coming out right.</p>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<section class="band">
+  <div class="rail">&mdash;</div>
+  <div class="flow">
+    <h2 class="sec">References and data</h2>
+    <ol class="refs">
+      <li>L. Wu, T. Burger, P. Sch&ouml;nle and Q. Huang, &ldquo;A Power-Efficient Fractional-N DPLL
+      With Phase Error Quantized in Fully Differential-Voltage Domain,&rdquo; <i>IEEE Journal of
+      Solid-State Circuits</i>, vol. 56, no. 4, pp. 1254&ndash;1264, April 2021.</li>
+      <li>Reproduction source, test suite and figure scripts: <code>fdv-adpll</code> v1.1.0,
+      <code>https://github.com/Vidurangajka/fdv-adpll</code>. 283 tests; <code>pytest -m "not slow"</code> runs the fast subset.</li>
+      <li>Dataset: <code>data/design_space.csv</code>, 16&nbsp;384 rows &times; 53 columns, with
+      <code>design_space.meta.json</code> recording sampling ranges, fixed choices and limitations.
+      Generation is deterministic given a seed and takes about thirty seconds.</li>
+      <li>sky130A work, under <code>silicon/</code>: <code>spec/make_spec.py</code> generates the
+      specification and the tolerance budget; <code>layout/</code> holds the cell generators, GDS
+      and verification scripts; <code>ngspice/</code> the testbenches and their recorded results;
+      <code>digital/</code> the control RTL and LibreLane configuration. All run in the
+      IIC-OSIC-TOOLS container with the sky130A PDK; <code>silicon/README.md</code> documents each
+      step.</li>
+      <li>SkyWater Technology and Google, SKY130 open-source process design kit,
+      <code>https://github.com/google/skywater-pdk</code>.</li>
+      <li>H. Pretl <i>et al.</i>, IIC-OSIC-TOOLS container,
+      <code>https://github.com/iic-jku/IIC-OSIC-TOOLS</code>.</li>
+    </ol>
+    <p class="tnote" style="margin-top:22px">Measured values in Table 1 are the figures quoted in
+    the text of [1]; the full measured traces are not published as data, and no attempt has been
+    made to digitise them. Every other number in this report is produced by the reproduction and is
+    regenerable from the cited source.</p>
+  </div>
+</section>
+
+<footer class="end">
+  Reproduction study of a published fractional-N DPLL. All simulated and analytic figures are
+  regenerable from the cited source at the stated version with
+  <code>python scripts/reproduce.py</code>; measured figures are attributed to [1].
+  <br><br>
+  Code, simulations and parts of this report were developed with the assistance of Claude
+  (Anthropic), an AI model. The author directed the work and is responsible for its content.
+</footer>
+
+</div>
+
+</body></html>
