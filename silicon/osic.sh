@@ -7,10 +7,14 @@
 #   ./osic.sh --gui | --stop            desktop at http://localhost:8080
 #   ./osic.sh --check                   tool versions + PDK sanity
 set -eu
+# Git Bash on Windows rewrites /work in the arguments into a Windows path
+export MSYS_NO_PATHCONV=1
 IMAGE="${OSIC_IMAGE:-hpretl/iic-osic-tools:latest}"
 WORK="$(cd "$(dirname "$0")" && pwd)"
 GUI_NAME=fdv-osic
-COMMON=(-e PDK=sky130A -v "$WORK:/work" -w /work)
+# per-container memory cap -- see osic.ps1
+MEM="${OSIC_MEM:-2200m}"
+COMMON=(-e PDK=sky130A -v "$WORK:/work" -w /work --memory "$MEM" --memory-swap "$MEM")
 
 docker info >/dev/null 2>&1 || { echo "Docker engine not reachable" >&2; exit 1; }
 

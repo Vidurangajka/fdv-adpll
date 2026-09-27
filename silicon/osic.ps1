@@ -20,28 +20,33 @@
   .\osic.ps1 -Stop                              # stop the -Gui container
   .\osic.ps1 -Check                             # tool versions + PDK sanity
 #>
-[CmdletBinding(DefaultParameterSetName = "Run")]
-param(
-    [Parameter(ParameterSetName = "Shell")] [switch]$Shell,
-    [Parameter(ParameterSetName = "Gui")]   [switch]$Gui,
-    [Parameter(ParameterSetName = "Stop")]  [switch]$Stop,
-    [Parameter(ParameterSetName = "Check")] [switch]$Check,
-    [Parameter(ParameterSetName = "Run", Position = 0, ValueFromRemainingArguments = $true)]
-    [string[]]$Command
-)
+# No param() block on purpose.  A declared -Check or -Command would capture any
+# argument PowerShell can read as a prefix of it -- `bash -c ...` binds -c to
+# them and never reaches the container.  An undeclared script gets every
+# argument in $args untouched.
+$Mode = if ($args.Count -gt 0 -and $args[0] -in "-Shell", "-Gui", "-Stop", "-Check") {
+    $args[0].TrimStart("-")
+} else { "Run" }
+$Command = $args
 
-$ErrorActionPreference = "Stop"
+# Not "Stop": Windows PowerShell 5.1 would turn every line a tool writes to
+# stderr -- ngspice warnings, magic chatter -- into a terminating error.
 $Image = if ($env:OSIC_IMAGE) { $env:OSIC_IMAGE } else { "hpretl/iic-osic-tools:latest" }
 $Work = $PSScriptRoot                   # silicon/
 $GuiName = "fdv-osic"
-$Common = @("-e", "PDK=sky130A", "-v", "${Work}:/work", "-w", "/work")
+# A memory cap per container: a runaway simulation is OOM-killed on its own
+# instead of starving the Docker VM, which hangs the whole engine (it did,
+# twice, on an 8 GB machine).  $env:OSIC_MEM overrides it.
+$Mem = if ($env:OSIC_MEM) { $env:OSIC_MEM } else { "2200m" }
+$Common = @("-e", "PDK=sky130A", "-v", "${Work}:/work", "-w", "/work",
+            "--memory", $Mem, "--memory-swap", $Mem)
 
 docker info --format "{{.ServerVersion}}" *> $null
 if ($LASTEXITCODE -ne 0) {
     throw "Docker engine not reachable -- start Docker Desktop first."
 }
 
-switch ($PSCmdlet.ParameterSetName) {
+switch ($Mode) {
     "Gui" {
         # The image's own entry point starts a desktop served over noVNC on
         # port 80 inside the container; publish it on 8080 so it does not
